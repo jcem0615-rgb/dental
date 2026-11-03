@@ -43,6 +43,9 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('odontogram');
 
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [selectedSalesDate, setSelectedSalesDate] = useState(todayStr);
+
   const [notifications, setNotifications] = useState([
     { id: 1, title: 'System Notice', text: 'Welcome to DentiClinic PWA enterprise platform.', time: 'Just now', read: false }
   ]);
@@ -432,18 +435,17 @@ export default function App() {
     (msg.senderId === chatRecipientId && msg.receiverId === currentUser?.id)
   );
 
-  const todayStr = new Date().toISOString().split('T')[0];
-  const currentMonthStr = todayStr.substring(0, 7); // e.g. "2026-11"
+  const currentMonthStr = selectedSalesDate ? selectedSalesDate.substring(0, 7) : todayStr.substring(0, 7);
 
   const allPaidAppointments = appointments.filter(apt => apt.paid);
   
-  // Today Sales
-  const todayPaidAppointments = allPaidAppointments.filter(apt => apt.date === todayStr);
-  const totalDailySales = todayPaidAppointments.reduce((sum, apt) => sum + (apt.amount || 0), 0);
-  const cashDailySales = todayPaidAppointments.filter(apt => apt.paymentMethod === 'Cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
-  const gcashDailySales = todayPaidAppointments.filter(apt => apt.paymentMethod === 'GCash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
+  // Sales for the Selected Date
+  const selectedDatePaidAppointments = allPaidAppointments.filter(apt => apt.date === selectedSalesDate);
+  const totalSelectedDateSales = selectedDatePaidAppointments.reduce((sum, apt) => sum + (apt.amount || 0), 0);
+  const cashSelectedDateSales = selectedDatePaidAppointments.filter(apt => apt.paymentMethod === 'Cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
+  const gcashSelectedDateSales = selectedDatePaidAppointments.filter(apt => apt.paymentMethod === 'GCash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
 
-  // Monthly Sales
+  // Monthly Sales based on the month of the selected date
   const monthlyPaidAppointments = allPaidAppointments.filter(apt => apt.date && apt.date.startsWith(currentMonthStr));
   const totalMonthlySales = monthlyPaidAppointments.reduce((sum, apt) => sum + (apt.amount || 0), 0);
   const cashMonthlySales = monthlyPaidAppointments.filter(apt => apt.paymentMethod === 'Cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
@@ -1136,39 +1138,52 @@ export default function App() {
 
           {activeTab === 'sales' && (
             <div className="space-y-6 max-w-5xl mx-auto">
-              <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-                <div className="flex items-center gap-2 mb-2">
-                  <BarChart3 className="w-5 h-5 text-teal-400" />
-                  <h2 className="text-base sm:text-lg font-bold text-white">Daily History & Monthly Sales Monitoring</h2>
+              <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <BarChart3 className="w-5 h-5 text-teal-400" />
+                    <h2 className="text-base sm:text-lg font-bold text-white">Daily History & Monthly Sales Monitoring</h2>
+                  </div>
+                  <p className="text-xs text-slate-400">Select any calendar date to audit transactions and revenue analytics.</p>
                 </div>
-                <p className="text-xs text-slate-400">Comprehensive audit trail of daily transactions and monthly financial monitoring.</p>
+
+                <div className="flex items-center gap-2 bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl">
+                  <Calendar className="w-4 h-4 text-teal-400" />
+                  <span className="text-xs text-slate-300 font-medium">Audit Date:</span>
+                  <input
+                    type="date"
+                    value={selectedSalesDate}
+                    onChange={(e) => setSelectedSalesDate(e.target.value)}
+                    className="bg-transparent text-white text-xs font-bold focus:outline-none cursor-pointer"
+                  />
+                </div>
               </div>
 
               {/* SUMMARY CARDS */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Daily Overview */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                {/* Selected Date Overview */}
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-lg">
                   <div className="flex justify-between items-center">
                     <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-teal-400">Today's Sales History ({todayStr})</h3>
-                      <p className="text-[11px] text-slate-400">Total collected today</p>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-teal-400">Sales for {selectedSalesDate}</h3>
+                      <p className="text-[11px] text-slate-400">Total collected on selected day</p>
                     </div>
-                    <div className="text-2xl font-extrabold text-white">₱{totalDailySales.toLocaleString()}</div>
+                    <div className="text-2xl font-extrabold text-white">₱{totalSelectedDateSales.toLocaleString()}</div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
                     <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
                       <div className="text-[10px] text-slate-400">Cash Collections</div>
-                      <div className="text-sm font-bold text-emerald-400">₱{cashDailySales.toLocaleString()}</div>
+                      <div className="text-sm font-bold text-emerald-400">₱{cashSelectedDateSales.toLocaleString()}</div>
                     </div>
                     <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
                       <div className="text-[10px] text-slate-400">GCash Collections</div>
-                      <div className="text-sm font-bold text-blue-400">₱{gcashDailySales.toLocaleString()}</div>
+                      <div className="text-sm font-bold text-blue-400">₱{gcashSelectedDateSales.toLocaleString()}</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Monthly Monitoring */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-lg">
                   <div className="flex justify-between items-center">
                     <div>
                       <h3 className="text-xs font-bold uppercase tracking-wider text-teal-400">Monthly Monitoring ({currentMonthStr})</h3>
@@ -1189,9 +1204,17 @@ export default function App() {
                 </div>
               </div>
 
-              {/* DAILY TRANSACTIONS AUDIT TABLE */}
-              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Today's Transaction Log</h3>
+              {/* TRANSACTION AUDIT TABLE FOR SELECTED DATE */}
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-4 shadow-lg">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Transaction Log for {selectedSalesDate}</h3>
+                  <button
+                    onClick={() => setSelectedSalesDate(todayStr)}
+                    className="text-[11px] text-teal-400 hover:underline"
+                  >
+                    Jump to Today
+                  </button>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm min-w-[700px]">
                     <thead className="bg-slate-950 border-b border-slate-800 text-xs text-slate-400 uppercase">
@@ -1205,8 +1228,8 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800 text-slate-300 text-xs">
-                      {todayPaidAppointments.length > 0 ? (
-                        todayPaidAppointments.map(apt => (
+                      {selectedDatePaidAppointments.length > 0 ? (
+                        selectedDatePaidAppointments.map(apt => (
                           <tr key={apt.id} className="hover:bg-slate-800/50">
                             <td className="p-3 font-semibold text-white">{apt.patientName}</td>
                             <td className="p-3">{apt.service}</td>
@@ -1224,8 +1247,8 @@ export default function App() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="6" className="text-center py-8 text-slate-500">
-                            No paid transactions recorded for today ({todayStr}).
+                          <td colSpan="6" className="text-center py-10 text-slate-500">
+                            No paid transactions recorded for {selectedSalesDate}.
                           </td>
                         </tr>
                       )}
