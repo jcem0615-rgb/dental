@@ -20,7 +20,9 @@ import {
   X,
   Bell,
   Building2,
-  Stethoscope
+  Stethoscope,
+  DollarSign,
+  Banknote
 } from 'lucide-react';
 
 export default function App() {
@@ -110,7 +112,8 @@ export default function App() {
     try {
       const saved = localStorage.getItem('denti_appointments');
       return saved ? JSON.parse(saved) : [
-        { id: 'APT-1', patientId: 'P-101', patientName: 'Maria Santos', service: 'Tooth Extraction', clinicName: 'DentiClinic - Malasiqui Main', date: '2026-11-05', time: '10:00 AM', status: 'Confirmed', amount: 1500, paid: true }
+        { id: 'APT-1', patientId: 'P-101', patientName: 'Maria Santos', service: 'Tooth Extraction', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '10:00 AM', status: 'Confirmed', amount: 1500, paid: true, paymentMethod: 'GCash' },
+        { id: 'APT-2', patientId: 'P-102', patientName: 'Juan Dela Cruz', service: 'Dental Cleaning', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '02:00 PM', status: 'Confirmed', amount: 1200, paid: true, paymentMethod: 'Cash' }
       ];
     } catch {
       return [];
@@ -229,18 +232,6 @@ export default function App() {
     addNotification('Security', 'Password updated successfully.');
   };
 
-  const triggerPasswordReset = (targetId, type) => {
-    if (type === 'patient') {
-      setPatients(prev => prev.map(p => p.id === targetId ? { ...p, password: 'password123', mustChangePassword: true } : p));
-      setResetSuccessMessage(`Password for patient ${targetId} reset to 'password123'.`);
-      addNotification('Security Audit', `Admin triggered password reset for patient ${targetId}.`);
-    } else if (type === 'assistant') {
-      setAssistants(prev => prev.map(a => a.id === targetId ? { ...a, password: 'password123', mustChangePassword: true } : a));
-      setResetSuccessMessage(`Password for assistant ${targetId} reset to 'password123'.`);
-    }
-    setTimeout(() => setResetSuccessMessage(''), 4000);
-  };
-
   const quickSwitch = (role) => {
     if (role === 'dentist') {
       setCurrentUser({ id: 'DOC-1', name: 'Dr. Estrada, DDM', role: 'dentist', email: 'admin@denticlinic.ph' });
@@ -347,7 +338,8 @@ export default function App() {
         time: '10:00 AM',
         status: 'Scheduled',
         amount: 0,
-        paid: true
+        paid: true,
+        paymentMethod: 'Cash'
       };
       setAppointments(prev => [followUpApt, ...prev]);
     }
@@ -383,11 +375,17 @@ export default function App() {
     addNotification('New Message', 'Message sent.');
   };
 
-  // Messenger logic: Filter messages strictly between current user and selected chat recipient
   const activeChatMessages = messages.filter(msg => 
     (msg.senderId === currentUser?.id && msg.receiverId === chatRecipientId) ||
     (msg.senderId === chatRecipientId && msg.receiverId === currentUser?.id)
   );
+
+  // Daily Sales Calculations for Today's Date
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayPaidAppointments = appointments.filter(apt => apt.paid && apt.date === todayStr);
+  const totalDailySales = todayPaidAppointments.reduce((sum, apt) => sum + (apt.amount || 0), 0);
+  const cashDailySales = todayPaidAppointments.filter(apt => apt.paymentMethod === 'Cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
+  const gcashDailySales = todayPaidAppointments.filter(apt => apt.paymentMethod === 'GCash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
 
   const ToothIcon = ({ condition }) => {
     let fillColor = "#38bdf8";
@@ -628,7 +626,7 @@ export default function App() {
             { id: 'consultation', label: 'Consultations & Follow-up', icon: Stethoscope, roles: ['dentist', 'assistant'] },
             { id: 'history', label: 'Medical History', icon: FileText, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'clinics', label: 'Clinics & Branches', icon: Building2, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'appointments', label: 'Appointments', icon: Calendar, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'appointments', label: 'Appointments & Billing', icon: Calendar, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'vitals', label: 'Vital Signs', icon: ShieldAlert, roles: ['dentist', 'assistant'] },
             { id: 'patients', label: 'Patients List', icon: Users, roles: ['dentist', 'assistant'] },
             { id: 'chat', label: 'Clinical Chat', icon: MessageSquare, roles: ['dentist', 'assistant', 'patient'] },
@@ -953,10 +951,44 @@ export default function App() {
 
           {activeTab === 'appointments' && (
             <div className="space-y-6 max-w-5xl mx-auto">
+              {/* Daily Sales Card for Dentist / Assistant */}
+              {currentUser.role !== 'patient' && (
+                <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-teal-950/40 p-5 rounded-2xl border border-teal-500/20 shadow-xl">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
+                        <DollarSign className="w-4 h-4" /> Daily Sales Overview
+                      </div>
+                      <p className="text-xs text-slate-400">Today's collection breakdown ({todayStr})</p>
+                    </div>
+                    <div className="text-2xl sm:text-3xl font-extrabold text-white">
+                      ₱{totalDailySales.toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
+                    <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Banknote className="w-4 h-4 text-emerald-400" />
+                        <span className="text-xs text-slate-300 font-medium">Cash Sales</span>
+                      </div>
+                      <span className="text-sm font-bold text-emerald-400">₱{cashDailySales.toLocaleString()}</span>
+                    </div>
+                    <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <QrCode className="w-4 h-4 text-blue-400" />
+                        <span className="text-xs text-slate-300 font-medium">GCash Sales</span>
+                      </div>
+                      <span className="text-sm font-bold text-blue-400">₱{gcashDailySales.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
                   <h2 className="text-base sm:text-lg font-bold text-white">Appointments & Billing</h2>
-                  <p className="text-xs text-slate-400">Manage clinic bookings and GCash payments</p>
+                  <p className="text-xs text-slate-400">Manage clinic bookings and payment settlements</p>
                 </div>
                 {currentUser.role === 'patient' && (
                   <button
@@ -978,7 +1010,7 @@ export default function App() {
                         <th className="p-4">Clinic Branch</th>
                         <th className="p-4">Date & Time</th>
                         <th className="p-4">Amount</th>
-                        <th className="p-4 text-right">Payment</th>
+                        <th className="p-4 text-right">Payment Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800 text-slate-300">
@@ -991,15 +1023,19 @@ export default function App() {
                           <td className="p-4 font-bold text-white">₱{apt.amount}</td>
                           <td className="p-4 text-right">
                             {apt.paid ? (
-                              <span className="text-xs text-emerald-400 font-bold flex items-center justify-end gap-1">
-                                <CheckCircle2 className="w-4 h-4" /> Paid via GCash
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold ${
+                                apt.paymentMethod === 'Cash' 
+                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
+                                  : 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+                              }`}>
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Paid via {apt.paymentMethod || 'GCash'}
                               </span>
                             ) : (
                               <button
                                 onClick={() => { setActivePaymentApt(apt); setShowPaymentModal(true); }}
-                                className="px-3 py-1.5 bg-teal-500/10 border border-teal-500/30 text-teal-400 hover:bg-teal-500 hover:text-slate-950 rounded-xl text-xs font-semibold"
+                                className="px-3.5 py-1.5 bg-teal-500/10 border border-teal-500/30 text-teal-400 hover:bg-teal-500 hover:text-slate-950 rounded-xl text-xs font-semibold transition"
                               >
-                                Pay GCash
+                                Collect Payment
                               </button>
                             )}
                           </td>
@@ -1497,11 +1533,12 @@ export default function App() {
                   patientName: currentUser.name,
                   service: bookingData.service,
                   clinicName: bookingData.clinicName,
-                  date: bookingData.date || '2026-11-10',
+                  date: bookingData.date || new Date().toISOString().split('T')[0],
                   time: bookingData.time,
                   status: 'Pending',
                   amount: bookingData.amount,
-                  paid: false
+                  paid: false,
+                  paymentMethod: 'Cash'
                 };
                 setAppointments([...appointments, newApt]);
                 setShowBookingModal(false);
@@ -1564,24 +1601,39 @@ export default function App() {
 
       {showPaymentModal && activePaymentApt && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm text-center">
-            <h3 className="font-bold text-white text-lg mb-1">GCash Express Payment</h3>
-            <p className="text-xs text-slate-400 mb-4">{activePaymentApt.service} - ₱{activePaymentApt.amount}</p>
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm text-center space-y-4">
+            <h3 className="font-bold text-white text-lg">Select Payment Method</h3>
+            <p className="text-xs text-slate-400">{activePaymentApt.service} - <span className="text-white font-bold">₱{activePaymentApt.amount}</span></p>
 
-            <div className="bg-white p-4 rounded-2xl inline-block mb-4 shadow-lg">
-              <QrCode className="w-32 h-32 sm:w-36 sm:h-36 text-slate-900 mx-auto" />
-              <div className="text-[10px] text-slate-500 mt-2 font-mono">Merchant: DentiClinic Inc.</div>
+            <div className="space-y-2.5 pt-2">
+              <button
+                onClick={() => {
+                  setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed', paymentMethod: 'Cash' } : a));
+                  setShowPaymentModal(false);
+                  addNotification('Payment Confirmed', `Cash payment of ₱${activePaymentApt.amount} processed.`);
+                }}
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
+              >
+                <Banknote className="w-4 h-4" /> Paid by Cash
+              </button>
+
+              <button
+                onClick={() => {
+                  setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed', paymentMethod: 'GCash' } : a));
+                  setShowPaymentModal(false);
+                  addNotification('Payment Confirmed', `GCash payment of ₱${activePaymentApt.amount} processed.`);
+                }}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+              >
+                <QrCode className="w-4 h-4" /> Paid by GCash
+              </button>
             </div>
 
             <button
-              onClick={() => {
-                setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed' } : a));
-                setShowPaymentModal(false);
-                addNotification('Payment Confirmed', `GCash payment of ₱${activePaymentApt.amount} processed successfully.`);
-              }}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20"
+              onClick={() => setShowPaymentModal(false)}
+              className="w-full py-2 bg-slate-800 text-slate-400 hover:text-white rounded-xl text-xs"
             >
-              Simulate GCash Paid Confirmation
+              Cancel
             </button>
           </div>
         </div>
