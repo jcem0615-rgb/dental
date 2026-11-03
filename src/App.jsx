@@ -23,7 +23,9 @@ import {
   Stethoscope,
   DollarSign,
   Banknote,
-  UserPlus
+  UserPlus,
+  TrendingUp,
+  BarChart3
 } from 'lucide-react';
 
 export default function App() {
@@ -354,8 +356,6 @@ export default function App() {
       return a;
     }));
     setSelectedPatientId(apt.patientId);
-
-    // Send Live Notification to Patient
     addNotification('Patient Called In', `Doctor called ${apt.patientName} into the chair.`);
   };
 
@@ -433,10 +433,21 @@ export default function App() {
   );
 
   const todayStr = new Date().toISOString().split('T')[0];
-  const todayPaidAppointments = appointments.filter(apt => apt.paid && apt.date === todayStr);
+  const currentMonthStr = todayStr.substring(0, 7); // e.g. "2026-11"
+
+  const allPaidAppointments = appointments.filter(apt => apt.paid);
+  
+  // Today Sales
+  const todayPaidAppointments = allPaidAppointments.filter(apt => apt.date === todayStr);
   const totalDailySales = todayPaidAppointments.reduce((sum, apt) => sum + (apt.amount || 0), 0);
   const cashDailySales = todayPaidAppointments.filter(apt => apt.paymentMethod === 'Cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
   const gcashDailySales = todayPaidAppointments.filter(apt => apt.paymentMethod === 'GCash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
+
+  // Monthly Sales
+  const monthlyPaidAppointments = allPaidAppointments.filter(apt => apt.date && apt.date.startsWith(currentMonthStr));
+  const totalMonthlySales = monthlyPaidAppointments.reduce((sum, apt) => sum + (apt.amount || 0), 0);
+  const cashMonthlySales = monthlyPaidAppointments.filter(apt => apt.paymentMethod === 'Cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
+  const gcashMonthlySales = monthlyPaidAppointments.filter(apt => apt.paymentMethod === 'GCash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
 
   const activeChairPatient = appointments.find(a => a.status === 'In-Chair');
 
@@ -665,7 +676,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Patient Live Queue Notification Banner */}
       {currentUser.role === 'patient' && (
         (() => {
           const myActiveApt = appointments.find(a => a.patientId === currentUser.id && a.status === 'In-Chair');
@@ -708,6 +718,7 @@ export default function App() {
             { id: 'history', label: 'Medical History', icon: FileText, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'clinics', label: 'Clinics & Branches', icon: Building2, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'appointments', label: 'Appointments & Billing', icon: Calendar, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'sales', label: 'Daily History & Monitoring', icon: BarChart3, roles: ['dentist', 'assistant'] },
             { id: 'patients', label: 'Patients List', icon: Users, roles: ['dentist', 'assistant'] },
             { id: 'chat', label: 'Clinical Chat', icon: MessageSquare, roles: ['dentist', 'assistant', 'patient'] },
           ]
@@ -874,7 +885,6 @@ export default function App() {
                 )}
               </div>
 
-              {/* LIVE QUEUE & CHAIR STATUS */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:col-span-1 flex flex-col justify-between">
                   <div>
@@ -1059,39 +1069,6 @@ export default function App() {
 
           {activeTab === 'appointments' && (
             <div className="space-y-6 max-w-5xl mx-auto">
-              {currentUser.role !== 'patient' && (
-                <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-teal-950/40 p-5 rounded-2xl border border-teal-500/20 shadow-xl">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                    <div>
-                      <div className="text-xs font-bold uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
-                        <DollarSign className="w-4 h-4" /> Daily Sales Overview
-                      </div>
-                      <p className="text-xs text-slate-400">Today's collection breakdown ({todayStr})</p>
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-extrabold text-white">
-                      ₱{totalDailySales.toLocaleString()}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
-                    <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Banknote className="w-4 h-4 text-emerald-400" />
-                        <span className="text-xs text-slate-300 font-medium">Cash Sales</span>
-                      </div>
-                      <span className="text-sm font-bold text-emerald-400">₱{cashDailySales.toLocaleString()}</span>
-                    </div>
-                    <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <QrCode className="w-4 h-4 text-blue-400" />
-                        <span className="text-xs text-slate-300 font-medium">GCash Sales</span>
-                      </div>
-                      <span className="text-sm font-bold text-blue-400">₱{gcashDailySales.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
                   <h2 className="text-base sm:text-lg font-bold text-white">Appointments & Billing</h2>
@@ -1150,6 +1127,108 @@ export default function App() {
                           </td>
                         </tr>
                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'sales' && (
+            <div className="space-y-6 max-w-5xl mx-auto">
+              <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                <div className="flex items-center gap-2 mb-2">
+                  <BarChart3 className="w-5 h-5 text-teal-400" />
+                  <h2 className="text-base sm:text-lg font-bold text-white">Daily History & Monthly Sales Monitoring</h2>
+                </div>
+                <p className="text-xs text-slate-400">Comprehensive audit trail of daily transactions and monthly financial monitoring.</p>
+              </div>
+
+              {/* SUMMARY CARDS */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Daily Overview */}
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-teal-400">Today's Sales History ({todayStr})</h3>
+                      <p className="text-[11px] text-slate-400">Total collected today</p>
+                    </div>
+                    <div className="text-2xl font-extrabold text-white">₱{totalDailySales.toLocaleString()}</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                    <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                      <div className="text-[10px] text-slate-400">Cash Collections</div>
+                      <div className="text-sm font-bold text-emerald-400">₱{cashDailySales.toLocaleString()}</div>
+                    </div>
+                    <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                      <div className="text-[10px] text-slate-400">GCash Collections</div>
+                      <div className="text-sm font-bold text-blue-400">₱{gcashDailySales.toLocaleString()}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Monthly Monitoring */}
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-teal-400">Monthly Monitoring ({currentMonthStr})</h3>
+                      <p className="text-[11px] text-slate-400">Total revenue this month</p>
+                    </div>
+                    <div className="text-2xl font-extrabold text-white">₱{totalMonthlySales.toLocaleString()}</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                    <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                      <div className="text-[10px] text-slate-400">Monthly Cash</div>
+                      <div className="text-sm font-bold text-emerald-400">₱{cashMonthlySales.toLocaleString()}</div>
+                    </div>
+                    <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                      <div className="text-[10px] text-slate-400">Monthly GCash</div>
+                      <div className="text-sm font-bold text-blue-400">₱{gcashMonthlySales.toLocaleString()}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* DAILY TRANSACTIONS AUDIT TABLE */}
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Today's Transaction Log</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm min-w-[700px]">
+                    <thead className="bg-slate-950 border-b border-slate-800 text-xs text-slate-400 uppercase">
+                      <tr>
+                        <th className="p-3">Patient Name</th>
+                        <th className="p-3">Service</th>
+                        <th className="p-3">Branch</th>
+                        <th className="p-3">Time</th>
+                        <th className="p-3">Method</th>
+                        <th className="p-3 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800 text-slate-300 text-xs">
+                      {todayPaidAppointments.length > 0 ? (
+                        todayPaidAppointments.map(apt => (
+                          <tr key={apt.id} className="hover:bg-slate-800/50">
+                            <td className="p-3 font-semibold text-white">{apt.patientName}</td>
+                            <td className="p-3">{apt.service}</td>
+                            <td className="p-3 text-teal-400">{apt.clinicName}</td>
+                            <td className="p-3">{apt.time}</td>
+                            <td className="p-3">
+                              <span className={`px-2 py-0.5 rounded-md font-bold ${
+                                apt.paymentMethod === 'Cash' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'
+                              }`}>
+                                {apt.paymentMethod || 'Cash'}
+                              </span>
+                            </td>
+                            <td className="p-3 text-right font-bold text-white">₱{apt.amount}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="6" className="text-center py-8 text-slate-500">
+                            No paid transactions recorded for today ({todayStr}).
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1288,7 +1367,6 @@ export default function App() {
         </main>
       </div>
 
-      {/* MODALS */}
       {showConsultationModal && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg">
@@ -1789,7 +1867,7 @@ export default function App() {
                 onClick={() => {
                   setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed', paymentMethod: 'Cash' } : a));
                   setShowPaymentModal(false);
-                  addNotification('Payment Confirmed', `Cash payment of ₱{activePaymentApt.amount} processed.`);
+                  addNotification('Payment Confirmed', `Cash payment of ₱${activePaymentApt.amount} processed.`);
                 }}
                 className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
               >
@@ -1800,7 +1878,7 @@ export default function App() {
                 onClick={() => {
                   setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed', paymentMethod: 'GCash' } : a));
                   setShowPaymentModal(false);
-                  addNotification('Payment Confirmed', `GCash payment of ₱{activePaymentApt.amount} processed.`);
+                  addNotification('Payment Confirmed', `GCash payment of ₱${activePaymentApt.amount} processed.`);
                 }}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
               >
