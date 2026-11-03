@@ -112,7 +112,8 @@ export default function App() {
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('denti_messages');
     return saved ? JSON.parse(saved) : [
-      { id: 1, fromId: 'DOC-1', fromName: 'Dr. Estrada', toId: 'P-101', text: 'Hi Maria, please remember to fast 2 hours before your appointment.', timestamp: '10:30 AM' }
+      { id: 1, senderId: 'DOC-1', receiverId: 'P-101', senderName: 'Dr. Estrada', text: 'Hi Maria, please remember to fast 2 hours before your appointment.', timestamp: '10:30 AM' },
+      { id: 2, senderId: 'P-101', receiverId: 'DOC-1', senderName: 'Maria Santos', text: 'Noted po Doctor, thank you!', timestamp: '10:32 AM' }
     ];
   });
 
@@ -169,6 +170,7 @@ export default function App() {
 
     if ((loginIdentifier === 'doctor' || loginIdentifier === 'admin@denticlinic.ph' || loginIdentifier === '09170000000') && loginPassword === 'admin123') {
       setCurrentUser({ id: 'DOC-1', name: 'Dr. Estrada, DDM', role: 'dentist', phone: '09170000000', email: 'admin@denticlinic.ph', mustChangePassword: false });
+      setChatRecipientId('P-101');
       addNotification('Sign In', 'Logged in as Chief Dentist.');
       return;
     }
@@ -176,6 +178,7 @@ export default function App() {
     const foundAssistant = assistants.find(a => (a.phone === loginIdentifier || a.email.toLowerCase() === loginIdentifier.toLowerCase()) && a.password === loginPassword);
     if (foundAssistant) {
       setCurrentUser({ ...foundAssistant, role: 'assistant' });
+      setChatRecipientId('DOC-1');
       addNotification('Sign In', `Logged in as Assistant ${foundAssistant.name}.`);
       if (foundAssistant.mustChangePassword) setShowForcePasswordModal(true);
       return;
@@ -185,6 +188,7 @@ export default function App() {
     if (foundPatient) {
       setCurrentUser({ ...foundPatient, role: 'patient' });
       setSelectedPatientId(foundPatient.id);
+      setChatRecipientId('DOC-1');
       addNotification('Sign In', `Welcome back, ${foundPatient.name}.`);
       if (foundPatient.mustChangePassword) setShowForcePasswordModal(true);
       return;
@@ -233,11 +237,14 @@ export default function App() {
   const quickSwitch = (role) => {
     if (role === 'dentist') {
       setCurrentUser({ id: 'DOC-1', name: 'Dr. Estrada, DDM', role: 'dentist', email: 'admin@denticlinic.ph' });
+      setChatRecipientId('P-101');
     } else if (role === 'assistant') {
       setCurrentUser({ id: 'A-01', name: 'Nurse Joy', role: 'assistant', email: 'joy@denticlinic.ph' });
+      setChatRecipientId('DOC-1');
     } else if (role === 'patient') {
       setCurrentUser({ id: 'P-101', name: 'Maria Santos', role: 'patient', email: 'maria@example.com' });
       setSelectedPatientId('P-101');
+      setChatRecipientId('DOC-1');
     }
     addNotification('Quick Switch', `Switched session role to ${role}.`);
   };
@@ -358,16 +365,22 @@ export default function App() {
     if (!chatInputText.trim() || !currentUser) return;
     const newMsg = {
       id: Date.now(),
-      fromId: currentUser.id,
-      fromName: currentUser.name,
-      toId: chatRecipientId,
+      senderId: currentUser.id,
+      receiverId: chatRecipientId,
+      senderName: currentUser.name,
       text: chatInputText,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-    setMessages([...messages, newMsg]);
+    setMessages(prev => [...prev, newMsg]);
     setChatInputText('');
-    addNotification('New Message', `Message sent to participant.`);
+    addNotification('New Message', `Message sent.`);
   };
+
+  // Messenger logic: filter messages between current user and selected chat recipient
+  const activeChatMessages = messages.filter(msg => 
+    (msg.senderId === currentUser.id && msg.receiverId === chatRecipientId) ||
+    (msg.senderId === chatRecipientId && msg.receiverId === currentUser.id)
+  );
 
   const ToothIcon = ({ condition }) => {
     let fillColor = "#38bdf8";
@@ -1122,48 +1135,64 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 8: CLINICAL CHAT */}
+          {/* TAB 8: CLINICAL CHAT (MESSENGER LOGIC) */}
           {activeTab === 'chat' && (
             <div className="max-w-4xl mx-auto h-[550px] sm:h-[600px] bg-slate-900 rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
               <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <h3 className="font-bold text-white text-base">Clinical Messaging</h3>
+                <h3 className="font-bold text-white text-base">Messenger Inbox</h3>
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-slate-400">To:</label>
+                  <label className="text-xs text-slate-400">Chat with:</label>
                   <select
                     value={chatRecipientId}
                     onChange={(e) => setChatRecipientId(e.target.value)}
                     className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-1.5 focus:outline-none"
                   >
-                    {patients.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} (Patient)</option>
-                    ))}
-                    {assistants.map(a => (
-                      <option key={a.id} value={a.id}>{a.name} (Assistant)</option>
-                    ))}
+                    {currentUser.role === 'patient' ? (
+                      <option value="DOC-1">Dr. Estrada, DDM (Dentist)</option>
+                    ) : (
+                      <>
+                        <optgroup label="Patients">
+                          {patients.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </optgroup>
+                        <optgroup label="Assistants">
+                          {assistants.filter(a => a.id !== currentUser.id).map(a => (
+                            <option key={a.id} value={a.id}>{a.name}</option>
+                          ))}
+                        </optgroup>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
 
               <div className="flex-1 p-4 overflow-y-auto space-y-3">
-                {messages.map(msg => {
-                  const isMe = msg.fromId === currentUser.id;
-                  return (
-                    <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                      <div className="text-[10px] text-slate-400 mb-1">{msg.fromName} • {msg.timestamp}</div>
-                      <div className={`p-3 rounded-2xl max-w-xs sm:max-w-sm text-sm ${
-                        isMe ? 'bg-teal-500 text-slate-950 font-medium' : 'bg-slate-800 text-white border border-slate-700'
-                      }`}>
-                        {msg.text}
+                {activeChatMessages.length > 0 ? (
+                  activeChatMessages.map(msg => {
+                    const isMe = msg.senderId === currentUser.id;
+                    return (
+                      <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                        <div className="text-[10px] text-slate-400 mb-1">{msg.senderName} • {msg.timestamp}</div>
+                        <div className={`p-3 rounded-2xl max-w-xs sm:max-w-sm text-sm ${
+                          isMe ? 'bg-teal-500 text-slate-950 font-medium' : 'bg-slate-800 text-white border border-slate-700'
+                        }`}>
+                          {msg.text}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-20 text-slate-500 text-xs">
+                    No messages in this thread yet. Send a message to start the conversation!
+                  </div>
+                )}
               </div>
 
               <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-800 flex gap-2">
                 <input
                   type="text"
-                  placeholder="Type clinical message..."
+                  placeholder="Type a message..."
                   value={chatInputText}
                   onChange={(e) => setChatInputText(e.target.value)}
                   className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
