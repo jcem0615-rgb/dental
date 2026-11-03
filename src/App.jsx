@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import * as LucideIcons from 'lucide-react';
+import React, { useState } from 'react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -484,7 +483,7 @@ export default function App() {
         <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
           <div className="text-center mb-6">
             <div className="inline-flex p-3 bg-teal-500/10 text-teal-400 rounded-2xl mb-3 border border-teal-500/20">
-              <LucideIcons.Activity className="w-8 h-8" />
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
             </div>
             <h1 className="text-2xl font-bold text-white">DentiClinic PWA</h1>
             <p className="text-slate-400 text-sm mt-1">Dental Practice & Patient Portal</p>
@@ -492,7 +491,7 @@ export default function App() {
 
           {authError && (
             <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-sm flex items-center gap-2">
-              <LucideIcons.AlertTriangle className="w-4 h-4 shrink-0" />
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
               <span>{authError}</span>
             </div>
           )}
@@ -501,7 +500,7 @@ export default function App() {
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Phone Number or Email</label>
               <div className="relative">
-                <LucideIcons.User className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+                <svg className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                 <input
                   type="text"
                   required
@@ -516,7 +515,7 @@ export default function App() {
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Password</label>
               <div className="relative">
-                <LucideIcons.Key className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+                <svg className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
@@ -530,7 +529,7 @@ export default function App() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-3.5 text-slate-500 hover:text-slate-300"
                 >
-                  {showPassword ? <LucideIcons.EyeOff className="w-4 h-4" /> : <LucideIcons.Eye className="w-4 h-4" />}
+                  {showPassword ? <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg> : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>}
                 </button>
               </div>
             </div>
@@ -567,7 +566,7 @@ export default function App() {
       <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl text-slate-100">
           <div className="flex items-center gap-3 text-amber-400 mb-4">
-            <LucideIcons.Lock className="w-6 h-6" />
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
             <h2 className="text-lg font-bold text-white">Password Change Required</h2>
           </div>
           <p className="text-slate-400 text-sm mb-4">
@@ -618,7 +617,7 @@ export default function App() {
       <header className="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-teal-500/10 text-teal-400 rounded-xl border border-teal-500/20">
-            <LucideIcons.Activity className="w-5 h-5" />
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
           <div>
             <h1 className="font-bold text-white text-base leading-tight">DentiClinic PWA</h1>
@@ -636,7 +635,7 @@ export default function App() {
               className="p-2 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition relative"
               title="Notifications"
             >
-              <LucideIcons.Bell className="w-4 h-4" />
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
               {notifications.some(n => !n.read && (currentUser.role === 'patient' ? (n.targetRole === 'all' || n.targetRole === 'patient') : n.targetRole !== 'patient')) && (
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-teal-400"></span>
               )}
@@ -700,7 +699,7 @@ export default function App() {
             className="p-2 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition"
             title="Log Out"
           >
-            <LucideIcons.LogOut className="w-4 h-4" />
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
           </button>
         </div>
       </header>
@@ -713,7 +712,7 @@ export default function App() {
             return (
               <div className="bg-teal-500 text-slate-950 px-4 py-2.5 text-xs font-bold flex items-center justify-between shadow-lg">
                 <div className="flex items-center gap-2">
-                  <LucideIcons.Stethoscope className="w-4 h-4 animate-pulse" />
+                  <svg className="w-4 h-4 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" /></svg>
                   <span>Dr. Estrada is calling you into the chair! Please proceed to the dental room.</span>
                 </div>
                 <span className="bg-slate-950 text-teal-400 px-2 py-0.5 rounded-lg text-[10px]">IN-CHAIR</span>
@@ -734,7 +733,7 @@ export default function App() {
 
       {resetSuccessMessage && (
         <div className="bg-emerald-500/20 border-b border-emerald-500/30 px-4 py-2.5 text-xs text-emerald-300 flex items-center gap-2">
-          <LucideIcons.CheckCircle2 className="w-4 h-4 shrink-0" />
+          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
           <span>{resetSuccessMessage}</span>
         </div>
       )}
@@ -742,33 +741,29 @@ export default function App() {
       <div className="flex-1 flex flex-col md:flex-row bg-slate-950">
         <nav className="bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1.5 overflow-x-auto shrink-0">
           {[
-            { id: 'odontogram', label: 'Odontogram', icon: LucideIcons.Activity, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'consultation', label: 'Consultation & Queue', icon: LucideIcons.Stethoscope, roles: ['dentist', 'assistant'] },
-            { id: 'history', label: 'Medical History', icon: LucideIcons.FileText, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'clinics', label: 'Clinics & Branches', icon: LucideIcons.Building2, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'appointments', label: 'Appointments & Billing', icon: LucideIcons.Calendar, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'sales', label: 'Daily History & Monitoring', icon: LucideIcons.BarChart3, roles: ['dentist', 'assistant'] },
-            { id: 'patients', label: 'Patients List', icon: LucideIcons.Users, roles: ['dentist', 'assistant'] },
-            { id: 'chat', label: 'Clinical Chat', icon: LucideIcons.MessageSquare, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'odontogram', label: 'Odontogram', roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'consultation', label: 'Consultation & Queue', roles: ['dentist', 'assistant'] },
+            { id: 'history', label: 'Medical History', roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'clinics', label: 'Clinics & Branches', roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'appointments', label: 'Appointments & Billing', roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'sales', label: 'Daily History & Monitoring', roles: ['dentist', 'assistant'] },
+            { id: 'patients', label: 'Patients List', roles: ['dentist', 'assistant'] },
+            { id: 'chat', label: 'Clinical Chat', roles: ['dentist', 'assistant', 'patient'] },
           ]
             .filter(tab => tab.roles.includes(currentUser.role))
-            .map(tab => {
-              const TabIcon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition shrink-0 whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20'
-                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                  }`}
-                >
-                  <TabIcon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
+            .map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition shrink-0 whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                }`}
+              >
+                <span>{tab.label}</span>
+              </button>
+            ))}
         </nav>
 
         <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-950 text-slate-100">
@@ -798,7 +793,7 @@ export default function App() {
 
               {currentPatient && isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic) && (
                 <div className="bg-rose-500/10 border border-rose-500/30 p-4 rounded-2xl flex items-start sm:items-center gap-3 text-rose-400">
-                  <LucideIcons.AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 sm:mt-0" />
+                  <svg className="w-5 h-5 shrink-0 mt-0.5 sm:mt-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   <div>
                     <h4 className="font-semibold text-sm text-rose-300">Pre-Anesthesia Hypertension Warning</h4>
                     <p className="text-xs text-rose-400/90 mt-0.5">
@@ -909,7 +904,7 @@ export default function App() {
                     onClick={() => setShowWalkInModal(true)}
                     className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5"
                   >
-                    <LucideIcons.UserPlus className="w-4 h-4" /> Register Walk-In
+                    <span>Register Walk-In</span>
                   </button>
                 )}
               </div>
@@ -917,9 +912,7 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:col-span-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="font-bold text-white text-xs uppercase tracking-wider text-teal-400 mb-3 flex items-center gap-1.5">
-                      <LucideIcons.Stethoscope className="w-4 h-4" /> Current Chair Status
-                    </h3>
+                    <h3 className="font-bold text-white text-xs uppercase tracking-wider text-teal-400 mb-3">Current Chair Status</h3>
                     {activeChairPatient ? (
                       <div className="bg-teal-500/10 border border-teal-500/30 p-4 rounded-xl space-y-2">
                         <div className="text-xs text-teal-400 font-bold">IN CONSULTATION</div>
@@ -1005,7 +998,7 @@ export default function App() {
                       onClick={() => setShowAddHistoryModal(true)}
                       className="px-3.5 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shrink-0"
                     >
-                      <LucideIcons.Plus className="w-4 h-4" /> Add Record
+                      <span>Add Record</span>
                     </button>
                   </div>
                 )}
@@ -1111,7 +1104,7 @@ export default function App() {
                     onClick={() => setShowBookingModal(true)}
                     className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
                   >
-                    <LucideIcons.Plus className="w-4 h-4" /> Book Appointment
+                    <span>Book Appointment</span>
                   </button>
                 )}
               </div>
@@ -1146,7 +1139,7 @@ export default function App() {
                                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
                                   : 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
                               }`}>
-                                <LucideIcons.CheckCircle2 className="w-3.5 h-3.5" /> Paid via {apt.paymentMethod || 'GCash'}
+                                <span>Paid via {apt.paymentMethod || 'GCash'}</span>
                               </span>
                             ) : (
                               currentUser.role !== 'patient' ? (
@@ -1177,14 +1170,12 @@ export default function App() {
               <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <LucideIcons.BarChart3 className="w-5 h-5 text-teal-400" />
                     <h2 className="text-base sm:text-lg font-bold text-white">Daily History & Monthly Sales Monitoring</h2>
                   </div>
                   <p className="text-xs text-slate-400">Select any calendar date to audit transactions and revenue analytics.</p>
                 </div>
 
                 <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl">
-                  <LucideIcons.Calendar className="w-4 h-4 text-teal-400" />
                   <span className="text-xs text-slate-300 font-medium">Audit Date:</span>
                   <input
                     type="date"
@@ -1302,7 +1293,7 @@ export default function App() {
                   onClick={() => setShowNewPatientModal(true)}
                   className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
                 >
-                  <LucideIcons.Plus className="w-4 h-4" /> Register Patient
+                  <span>Register Patient</span>
                 </button>
               </div>
 
@@ -1414,7 +1405,7 @@ export default function App() {
                   className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
                 />
                 <button type="submit" className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1">
-                  <LucideIcons.Send className="w-4 h-4" /> Send
+                  <span>Send</span>
                 </button>
               </form>
             </div>
@@ -1427,9 +1418,7 @@ export default function App() {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base">Service Encounter & Billing Form</h3>
-              <button onClick={() => setShowConsultationModal(false)} className="text-slate-400 hover:text-white">
-                <LucideIcons.X className="w-5 h-5" />
-              </button>
+              <button onClick={() => setShowConsultationModal(false)} className="text-slate-400 hover:text-white">✕</button>
             </div>
             <form onSubmit={handleSaveConsultation} className="space-y-4">
               <div>
@@ -1531,9 +1520,7 @@ export default function App() {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base">Add Treatment Record</h3>
-              <button onClick={() => setShowAddHistoryModal(false)} className="text-slate-400 hover:text-white">
-                <LucideIcons.X className="w-5 h-5" />
-              </button>
+              <button onClick={() => setShowAddHistoryModal(false)} className="text-slate-400 hover:text-white">✕</button>
             </div>
             <form onSubmit={handleAddHistoryRecord} className="space-y-4">
               <div>
@@ -1584,9 +1571,7 @@ export default function App() {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base">Edit Branch Settings</h3>
-              <button onClick={() => setShowEditClinicModal(false)} className="text-slate-400 hover:text-white">
-                <LucideIcons.X className="w-5 h-5" />
-              </button>
+              <button onClick={() => setShowEditClinicModal(false)} className="text-slate-400 hover:text-white">✕</button>
             </div>
             <form
               onSubmit={(e) => {
@@ -1651,9 +1636,7 @@ export default function App() {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8 text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base sm:text-lg">Register Patient & Initial Vitals</h3>
-              <button onClick={() => setShowNewPatientModal(false)} className="text-slate-400 hover:text-white">
-                <LucideIcons.X className="w-5 h-5" />
-              </button>
+              <button onClick={() => setShowNewPatientModal(false)} className="text-slate-400 hover:text-white">✕</button>
             </div>
 
             <form onSubmit={handleCreatePatient} className="space-y-4">
@@ -1761,9 +1744,7 @@ export default function App() {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8 text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base sm:text-lg">Walk-In Profile & Queue Registration</h3>
-              <button onClick={() => setShowWalkInModal(false)} className="text-slate-400 hover:text-white">
-                <LucideIcons.X className="w-5 h-5" />
-              </button>
+              <button onClick={() => setShowWalkInModal(false)} className="text-slate-400 hover:text-white">✕</button>
             </div>
 
             <form onSubmit={handleRegisterWalkIn} className="space-y-4">
@@ -1999,24 +1980,24 @@ export default function App() {
                 onClick={() => {
                   setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed', paymentMethod: 'Cash' } : a));
                   setShowPaymentModal(false);
-                  addNotification('Payment Confirmed', `Cash payment of ₱${activePaymentApt.amount} processed.`, 'staff');
-                  addNotification('Payment Received', `Your payment of ₱${activePaymentApt.amount} via Cash was confirmed.`, 'patient');
+                  addNotification('Payment Confirmed', `Cash payment of ₱{activePaymentApt.amount} processed.`, 'staff');
+                  addNotification('Payment Received', `Your payment of ₱{activePaymentApt.amount} via Cash was confirmed.`, 'patient');
                 }}
                 className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
               >
-                <LucideIcons.Banknote className="w-4 h-4" /> Paid by Cash
+                <span>Paid by Cash</span>
               </button>
 
               <button
                 onClick={() => {
                   setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed', paymentMethod: 'GCash' } : a));
                   setShowPaymentModal(false);
-                  addNotification('Payment Confirmed', `GCash payment of ₱${activePaymentApt.amount} processed.`, 'staff');
-                  addNotification('Payment Received', `Your payment of ₱${activePaymentApt.amount} via GCash was confirmed.`, 'patient');
+                  addNotification('Payment Confirmed', `GCash payment of ₱{activePaymentApt.amount} processed.`, 'staff');
+                  addNotification('Payment Received', `Your payment of ₱{activePaymentApt.amount} via GCash was confirmed.`, 'patient');
                 }}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
               >
-                <LucideIcons.QrCode className="w-4 h-4" /> Paid by GCash
+                <span>Paid by GCash</span>
               </button>
             </div>
 
