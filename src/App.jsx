@@ -25,7 +25,8 @@ import {
   Banknote,
   UserPlus,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  Filter
 } from 'lucide-react';
 
 export default function App() {
@@ -47,9 +48,10 @@ export default function App() {
   const [selectedSalesDate, setSelectedSalesDate] = useState(todayStr);
 
   const [notifications, setNotifications] = useState([
-    { id: 1, title: 'System Notice', text: 'Welcome to DentiClinic PWA enterprise platform.', time: 'Just now', read: false }
+    { id: 1, targetRole: 'all', title: 'System Notice', text: 'Welcome to DentiClinic PWA enterprise platform.', time: 'Just now', read: false }
   ]);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
+  const [notificationFilter, setNotificationFilter] = useState('all'); // 'all' | 'unread' | 'read'
 
   const [patients, setPatients] = useState(() => {
     try {
@@ -182,8 +184,15 @@ export default function App() {
   useEffect(() => { localStorage.setItem('denti_assistants', JSON.stringify(assistants)); }, [assistants]);
   useEffect(() => { localStorage.setItem('denti_clinics', JSON.stringify(clinics)); }, [clinics]);
 
-  const addNotification = (title, text) => {
-    const newN = { id: Date.now(), title, text, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), read: false };
+  const addNotification = (title, text, targetRole = 'all') => {
+    const newN = { 
+      id: Date.now(), 
+      targetRole, // 'all', 'staff' (dentist/assistant), or 'patient'
+      title, 
+      text, 
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
+      read: false 
+    };
     setNotifications(prev => [newN, ...prev]);
   };
 
@@ -193,16 +202,18 @@ export default function App() {
 
     if ((loginIdentifier === 'doctor' || loginIdentifier === 'admin@denticlinic.ph' || loginIdentifier === '09170000000') && loginPassword === 'admin123') {
       setCurrentUser({ id: 'DOC-1', name: 'Dr. Estrada, DDM', role: 'dentist', phone: '09170000000', email: 'admin@denticlinic.ph', mustChangePassword: false });
+      setActiveTab('odontogram');
       setChatRecipientId('P-101');
-      addNotification('Sign In', 'Logged in as Chief Dentist.');
+      addNotification('Sign In', 'Logged in as Chief Dentist.', 'staff');
       return;
     }
 
     const foundAssistant = assistants.find(a => (a.phone === loginIdentifier || a.email.toLowerCase() === loginIdentifier.toLowerCase()) && a.password === loginPassword);
     if (foundAssistant) {
       setCurrentUser({ ...foundAssistant, role: 'assistant' });
+      setActiveTab('odontogram');
       setChatRecipientId('DOC-1');
-      addNotification('Sign In', `Logged in as Assistant ${foundAssistant.name}.`);
+      addNotification('Sign In', `Logged in as Assistant ${foundAssistant.name}.`, 'staff');
       if (foundAssistant.mustChangePassword) setShowForcePasswordModal(true);
       return;
     }
@@ -210,9 +221,10 @@ export default function App() {
     const foundPatient = patients.find(p => (p.phone === loginIdentifier || p.email.toLowerCase() === loginIdentifier.toLowerCase()) && p.password === loginPassword);
     if (foundPatient) {
       setCurrentUser({ ...foundPatient, role: 'patient' });
+      setActiveTab('odontogram');
       setSelectedPatientId(foundPatient.id);
       setChatRecipientId('DOC-1');
-      addNotification('Sign In', `Welcome back, ${foundPatient.name}.`);
+      addNotification('Sign In', `Welcome back, ${foundPatient.name}.`, 'patient');
       if (foundPatient.mustChangePassword) setShowForcePasswordModal(true);
       return;
     }
@@ -242,14 +254,14 @@ export default function App() {
     setNewPassword('');
     setConfirmPassword('');
     setPasswordError('');
-    addNotification('Security', 'Password updated successfully.');
+    addNotification('Security', 'Password updated successfully.', currentUser.role === 'patient' ? 'patient' : 'staff');
   };
 
   const triggerPasswordReset = (targetId, type) => {
     if (type === 'patient') {
       setPatients(prev => prev.map(p => p.id === targetId ? { ...p, password: 'password123', mustChangePassword: true } : p));
       setResetSuccessMessage(`Password for patient ${targetId} reset to 'password123'.`);
-      addNotification('Security Audit', `Admin triggered password reset for patient ${targetId}.`);
+      addNotification('Security Audit', `Admin triggered password reset for patient ${targetId}.`, 'staff');
     } else if (type === 'assistant') {
       setAssistants(prev => prev.map(a => a.id === targetId ? { ...a, password: 'password123', mustChangePassword: true } : a));
       setResetSuccessMessage(`Password for assistant ${targetId} reset to 'password123'.`);
@@ -269,7 +281,8 @@ export default function App() {
       setSelectedPatientId('P-101');
       setChatRecipientId('DOC-1');
     }
-    addNotification('Quick Switch', `Switched session role to ${role}.`);
+    setActiveTab('odontogram');
+    addNotification('Quick Switch', `Switched session role to ${role}.`, role === 'patient' ? 'patient' : 'staff');
   };
 
   const currentPatient = currentUser?.role === 'patient' 
@@ -305,7 +318,7 @@ export default function App() {
     setPatients([newP, ...patients]);
     setSelectedPatientId(newId);
     setShowNewPatientModal(false);
-    addNotification('Patient Registration', `Successfully registered patient ${newPatientData.name} (${newId}) with baseline vitals.`);
+    addNotification('Patient Registration', `Successfully registered patient ${newPatientData.name} (${newId}) with baseline vitals.`, 'staff');
   };
 
   const handleRegisterWalkIn = (e) => {
@@ -350,7 +363,7 @@ export default function App() {
     setPatients([newP, ...patients]);
     setAppointments([newApt, ...appointments]);
     setShowWalkInModal(false);
-    addNotification('Walk-In Queued', `Created profile & queued walk-in patient ${walkInData.name}.`);
+    addNotification('Walk-In Queued', `Created profile & queued walk-in patient ${walkInData.name}.`, 'staff');
   };
 
   const handleCallPatientInQueue = (apt) => {
@@ -360,7 +373,8 @@ export default function App() {
       return a;
     }));
     setSelectedPatientId(apt.patientId);
-    addNotification('Patient Called In', `Doctor called ${apt.patientName} into the chair.`);
+    addNotification('Patient Called In', `Doctor called ${apt.patientName} into the chair.`, 'staff');
+    addNotification('Chair Called', `Dr. Estrada called you into the chair! Please proceed.`, 'patient');
   };
 
   const handleSaveConsultation = (e) => {
@@ -385,7 +399,6 @@ export default function App() {
       return p;
     }));
 
-    // Update or create the billing / appointment record with the entered amount so it appears in the patient portal
     const activeApt = appointments.find(a => a.patientId === currentPatient.id && a.status === 'In-Chair');
     if (activeApt) {
       setAppointments(appointments.map(a => a.id === activeApt.id ? { ...a, service: finalServiceName, amount: parseFloat(consultationData.amount) || 0, status: 'Completed' } : a));
@@ -425,7 +438,8 @@ export default function App() {
 
     setShowConsultationModal(false);
     setConsultationData({ service: 'Dental Consultation', customService: '', amount: 500, chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: '' });
-    addNotification('Encounter Saved', `Recorded clinical service and updated billing for ${currentPatient.name}.`);
+    addNotification('Encounter Saved', `Recorded clinical service and updated billing for ${currentPatient.name}.`, 'staff');
+    addNotification('New Bill Available', `Your bill of ₱${consultationData.amount} for ${finalServiceName} has been posted.`, 'patient');
   };
 
   const handleAddHistoryRecord = (e) => {
@@ -450,7 +464,7 @@ export default function App() {
 
     setShowAddHistoryModal(false);
     setNewHistoryEntry({ procedure: 'Composite Filling', tooth: '#1', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: '' });
-    addNotification('History Record Added', `Added treatment record for ${currentPatient.name}.`);
+    addNotification('History Record Added', `Added treatment record for ${currentPatient.name}.`, 'staff');
   };
 
   const updateToothCondition = (toothNum, cond) => {
@@ -476,7 +490,7 @@ export default function App() {
     };
     setMessages(prev => [...prev, newMsg]);
     setChatInputText('');
-    addNotification('New Message', 'Message sent.');
+    addNotification('New Message', 'Message sent.', 'all');
   };
 
   const activeChatMessages = messages.filter(msg => 
@@ -499,6 +513,21 @@ export default function App() {
   const gcashMonthlySales = monthlyPaidAppointments.filter(apt => (apt.paymentMethod || '').toLowerCase() === 'gcash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
 
   const activeChairPatient = appointments.find(a => a.status === 'In-Chair');
+
+  // Filtered notifications based on user role and selected filter tab
+  const visibleNotifications = notifications.filter(n => {
+    // Role filter
+    if (currentUser.role === 'patient') {
+      if (n.targetRole !== 'all' && n.targetRole !== 'patient') return false;
+    } else {
+      if (n.targetRole === 'patient') return false;
+    }
+
+    // Tab filter
+    if (notificationFilter === 'unread') return !n.read;
+    if (notificationFilter === 'read') return n.read;
+    return true; // 'all'
+  });
 
   const ToothIcon = ({ condition }) => {
     let fillColor = "#38bdf8";
@@ -680,13 +709,13 @@ export default function App() {
               title="Notifications"
             >
               <Bell className="w-4 h-4" />
-              {notifications.some(n => !n.read) && (
+              {notifications.some(n => !n.read && (currentUser.role === 'patient' ? (n.targetRole === 'all' || n.targetRole === 'patient') : n.targetRole !== 'patient')) && (
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-teal-400"></span>
               )}
             </button>
 
             {showNotificationCenter && (
-              <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 z-50">
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 z-50">
                 <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
                   <h4 className="font-bold text-xs uppercase text-slate-300">System Notifications</h4>
                   <button
@@ -696,16 +725,40 @@ export default function App() {
                     Mark read
                   </button>
                 </div>
-                <div className="space-y-2.5 max-h-64 overflow-y-auto">
-                  {notifications.map(n => (
-                    <div key={n.id} className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50 text-xs">
-                      <div className="flex justify-between font-semibold text-white mb-0.5">
-                        <span>{n.title}</span>
-                        <span className="text-[10px] text-slate-400">{n.time}</span>
-                      </div>
-                      <p className="text-slate-300">{n.text}</p>
-                    </div>
+
+                {/* NOTIFICATION FILTER TABS */}
+                <div className="flex items-center gap-1.5 mb-3 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                  {['all', 'unread', 'read'].map(filter => (
+                    <button
+                      key={filter}
+                      onClick={() => setNotificationFilter(filter)}
+                      className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold capitalize transition ${
+                        notificationFilter === filter
+                          ? 'bg-teal-500 text-slate-950 shadow-sm'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {filter}
+                    </button>
                   ))}
+                </div>
+
+                <div className="space-y-2.5 max-h-64 overflow-y-auto">
+                  {visibleNotifications.length > 0 ? (
+                    visibleNotifications.map(n => (
+                      <div key={n.id} className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50 text-xs">
+                        <div className="flex justify-between font-semibold text-white mb-0.5">
+                          <span>{n.title}</span>
+                          <span className="text-[10px] text-slate-400">{n.time}</span>
+                        </div>
+                        <p className="text-slate-300">{n.text}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 text-slate-500 text-xs">
+                      No notifications found for this filter.
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -917,7 +970,7 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'consultation' && (
+          {activeTab === 'consultation' && currentUser.role !== 'patient' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
@@ -944,7 +997,7 @@ export default function App() {
                       <div className="bg-teal-500/10 border border-teal-500/30 p-4 rounded-xl space-y-2">
                         <div className="text-xs text-teal-400 font-bold">IN CONSULTATION</div>
                         <div className="text-base font-bold text-white">{activeChairPatient.patientName}</div>
-                        <div className="text-xs text-slate-350">Service: {activeChairPatient.service}</div>
+                        <div className="text-xs text-slate-300">Service: {activeChairPatient.service}</div>
                         <button
                           onClick={() => {
                             setSelectedPatientId(activeChairPatient.patientId);
@@ -1192,7 +1245,7 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'sales' && (
+          {activeTab === 'sales' && currentUser.role !== 'patient' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -1315,7 +1368,7 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'patients' && (
+          {activeTab === 'patients' && currentUser.role !== 'patient' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
@@ -1446,7 +1499,7 @@ export default function App() {
         </main>
       </div>
 
-      {showConsultationModal && (
+      {showConsultationModal && currentUser.role !== 'patient' && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
@@ -1550,7 +1603,7 @@ export default function App() {
         </div>
       )}
 
-      {showAddHistoryModal && (
+      {showAddHistoryModal && currentUser.role !== 'patient' && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
@@ -1603,7 +1656,7 @@ export default function App() {
         </div>
       )}
 
-      {showEditClinicModal && activeClinic && (
+      {showEditClinicModal && activeClinic && currentUser.role !== 'patient' && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
@@ -1617,7 +1670,7 @@ export default function App() {
                 e.preventDefault();
                 setClinics(clinics.map(c => c.id === activeClinic.id ? activeClinic : c));
                 setShowEditClinicModal(false);
-                addNotification('Branch Updated', `Settings for ${activeClinic.name} saved.`);
+                addNotification('Branch Updated', `Settings for ${activeClinic.name} saved.`, 'staff');
               }}
               className="space-y-4"
             >
@@ -1670,7 +1723,7 @@ export default function App() {
         </div>
       )}
 
-      {showNewPatientModal && (
+      {showNewPatientModal && currentUser.role !== 'patient' && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
@@ -1780,7 +1833,7 @@ export default function App() {
         </div>
       )}
 
-      {showWalkInModal && (
+      {showWalkInModal && currentUser.role !== 'patient' && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
@@ -1936,13 +1989,14 @@ export default function App() {
                   date: bookingData.date || new Date().toISOString().split('T')[0],
                   time: bookingData.time,
                   status: 'Queued',
-                  amount: 0, // Set by doctor/assistant during encounter
+                  amount: 0,
                   paid: false,
                   paymentMethod: 'Cash'
                 };
                 setAppointments([newApt, ...appointments]);
                 setShowBookingModal(false);
-                addNotification('Appointment Booked', `Successfully requested booking for ${finalServiceName}.`);
+                addNotification('Appointment Booked', `Successfully requested booking for ${finalServiceName}.`, 'staff');
+                addNotification('Appointment Confirmed', `Your booking for ${finalServiceName} has been queued.`, 'patient');
               }}
               className="space-y-4"
             >
@@ -2011,7 +2065,7 @@ export default function App() {
         </div>
       )}
 
-      {showPaymentModal && activePaymentApt && (
+      {showPaymentModal && activePaymentApt && currentUser.role !== 'patient' && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm text-center space-y-4">
             <h3 className="font-bold text-white text-lg">Select Payment Method</h3>
@@ -2022,7 +2076,8 @@ export default function App() {
                 onClick={() => {
                   setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed', paymentMethod: 'Cash' } : a));
                   setShowPaymentModal(false);
-                  addNotification('Payment Confirmed', `Cash payment of ₱${activePaymentApt.amount} processed.`);
+                  addNotification('Payment Confirmed', `Cash payment of ₱${activePaymentApt.amount} processed.`, 'staff');
+                  addNotification('Payment Received', `Your payment of ₱${activePaymentApt.amount} via Cash was confirmed.`, 'patient');
                 }}
                 className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
               >
@@ -2033,7 +2088,8 @@ export default function App() {
                 onClick={() => {
                   setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed', paymentMethod: 'GCash' } : a));
                   setShowPaymentModal(false);
-                  addNotification('Payment Confirmed', `GCash payment of ₱${activePaymentApt.amount} processed.`);
+                  addNotification('Payment Confirmed', `GCash payment of ₱${activePaymentApt.amount} processed.`, 'staff');
+                  addNotification('Payment Received', `Your payment of ₱${activePaymentApt.amount} via GCash was confirmed.`, 'patient');
                 }}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
               >
