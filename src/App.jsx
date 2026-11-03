@@ -55,7 +55,10 @@ export default function App() {
         mustChangePassword: false,
         vitals: { systolic: 120, diastolic: 80, hr: 72, spo2: 98, temp: 36.6, weight: 55 },
         conditions: { 4: 'Caries', 14: 'Filled' },
-        surfaces: { '4-O': true, '14-M': true }
+        history: [
+          { id: 'H-1', date: '2026-08-14', procedure: 'Composite Filling', tooth: '#14', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: 'Restored occlusal caries with light-cured composite.' },
+          { id: 'H-2', date: '2026-03-10', procedure: 'Prophylaxis (Cleaning)', tooth: 'All', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: 'Routine scaling and polishing. Mild gingivitis noted.' }
+        ]
       },
       {
         id: 'P-102',
@@ -68,7 +71,9 @@ export default function App() {
         mustChangePassword: false,
         vitals: { systolic: 145, diastolic: 92, hr: 85, spo2: 97, temp: 36.8, weight: 78 },
         conditions: { 19: 'Extracted' },
-        surfaces: {}
+        history: [
+          { id: 'H-3', date: '2026-09-01', procedure: 'Tooth Extraction', tooth: '#19', clinic: 'DentiClinic - Dagupan Branch', doctor: 'Dr. Estrada', notes: 'Extracted severely decayed molar under local anesthesia.' }
+        ]
       }
     ];
   });
@@ -99,8 +104,7 @@ export default function App() {
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('denti_messages');
     return saved ? JSON.parse(saved) : [
-      { id: 1, fromId: 'DOC-1', fromName: 'Dr. Estrada', toId: 'P-101', text: 'Hi Maria, please remember to fast 2 hours before your appointment.', timestamp: '10:30 AM' },
-      { id: 2, fromId: 'A-01', fromName: 'Nurse Joy', toId: 'DOC-1', text: 'Doctor, Mr. Juan Dela Cruz has elevated BP (145/92).', timestamp: '11:15 AM' }
+      { id: 1, fromId: 'DOC-1', fromName: 'Dr. Estrada', toId: 'P-101', text: 'Hi Maria, please remember to fast 2 hours before your appointment.', timestamp: '10:30 AM' }
     ];
   });
 
@@ -115,6 +119,7 @@ export default function App() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showEditClinicModal, setShowEditClinicModal] = useState(false);
+  const [showAddHistoryModal, setShowAddHistoryModal] = useState(false);
   const [activeClinic, setActiveClinic] = useState(null);
   const [activePaymentApt, setActivePaymentApt] = useState(null);
 
@@ -126,6 +131,10 @@ export default function App() {
 
   const [bookingData, setBookingData] = useState({
     service: 'Dental Cleaning', clinicName: 'DentiClinic - Malasiqui Main', date: '', time: '09:00 AM', amount: 1200
+  });
+
+  const [newHistoryEntry, setNewHistoryEntry] = useState({
+    procedure: 'Composite Filling', tooth: '#1', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: ''
   });
 
   // Sync to LocalStorage
@@ -233,12 +242,35 @@ export default function App() {
         weight: parseFloat(newPatientData.weight)
       },
       conditions: {},
-      surfaces: {}
+      history: []
     };
 
     setPatients([newP, ...patients]);
     setSelectedPatientId(newId);
     setShowNewPatientModal(false);
+  };
+
+  const handleAddHistoryRecord = (e) => {
+    e.preventDefault();
+    if (!currentPatient) return;
+    const entry = {
+      id: `H-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      procedure: newHistoryEntry.procedure,
+      tooth: newHistoryEntry.tooth,
+      clinic: newHistoryEntry.clinic,
+      doctor: newHistoryEntry.doctor,
+      notes: newHistoryEntry.notes
+    };
+
+    setPatients(patients.map(p => {
+      if (p.id === currentPatient.id) {
+        return { ...p, history: [entry, ...(p.history || [])] };
+      }
+      return p;
+    }));
+    setShowAddHistoryModal(false);
+    setNewHistoryEntry({ procedure: 'Composite Filling', tooth: '#1', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: '' });
   };
 
   const updateToothCondition = (toothNum, cond) => {
@@ -470,6 +502,7 @@ export default function App() {
         <nav className="bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1.5 overflow-x-auto shrink-0">
           {[
             { id: 'odontogram', label: 'Odontogram', icon: Activity, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'history', label: 'Medical History', icon: FileText, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'clinics', label: 'Clinics & Schedule', icon: Search, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'appointments', label: 'Appointments', icon: Calendar, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'vitals', label: 'Vital Signs', icon: ShieldAlert, roles: ['dentist', 'assistant'] },
@@ -632,7 +665,67 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 2: CLINICS & SCHEDULE */}
+          {/* TAB 2: MEDICAL RECORD & CLINICAL HISTORY */}
+          {activeTab === 'history' && (
+            <div className="space-y-6 max-w-5xl mx-auto">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Patient Clinical History</h2>
+                  <p className="text-xs text-slate-400">
+                    Showing treatment history for <span className="text-teal-400 font-semibold">{currentPatient?.name}</span> ({currentPatient?.id})
+                  </p>
+                </div>
+                {currentUser.role !== 'patient' ? (
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <select
+                      value={selectedPatientId}
+                      onChange={(e) => setSelectedPatientId(e.target.value)}
+                      className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-2.5"
+                    >
+                      {patients.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => setShowAddHistoryModal(true)}
+                      className="px-3.5 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shrink-0"
+                    >
+                      <Plus className="w-4 h-4" /> Add Record
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-4">
+                {currentPatient?.history && currentPatient.history.length > 0 ? (
+                  currentPatient.history.map(item => (
+                    <div key={item.id} className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-slate-700/50">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-1 bg-teal-500/10 text-teal-400 border border-teal-500/20 font-bold text-xs rounded-lg">
+                            {item.procedure}
+                          </span>
+                          <span className="text-xs font-mono text-slate-400">Tooth {item.tooth}</span>
+                        </div>
+                        <span className="text-xs text-slate-400 font-medium">{item.date}</span>
+                      </div>
+                      <p className="text-sm text-slate-200">{item.notes}</p>
+                      <div className="text-[11px] text-slate-400 flex items-center justify-between pt-1">
+                        <span>Clinic: {item.clinic}</span>
+                        <span>Doctor: {item.doctor}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-500 text-sm">
+                    No clinical procedure records found for this patient.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: CLINICS & SCHEDULE */}
           {activeTab === 'clinics' && (
             <div className="space-y-6 max-w-4xl mx-auto">
               <div className="flex justify-between items-center bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
@@ -691,7 +784,7 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 3: APPOINTMENTS & GCASH */}
+          {/* TAB 4: APPOINTMENTS & GCASH */}
           {activeTab === 'appointments' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
@@ -730,13 +823,6 @@ export default function App() {
                           <td className="p-4 text-xs text-teal-400 font-medium">{apt.clinicName}</td>
                           <td className="p-4">{apt.date} at {apt.time}</td>
                           <td className="p-4 font-bold text-white">₱{apt.amount}</td>
-                          <td className="p-4">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                              apt.status === 'Confirmed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
-                            }`}>
-                              {apt.status}
-                            </span>
-                          </td>
                           <td className="p-4 text-right">
                             {apt.paid ? (
                               <span className="text-xs text-emerald-400 font-bold flex items-center justify-end gap-1">
@@ -760,7 +846,7 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 4: VITALS INTAKE */}
+          {/* TAB 5: VITALS INTAKE */}
           {activeTab === 'vitals' && (
             <div className="space-y-6 max-w-4xl mx-auto">
               <div className="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
@@ -811,7 +897,7 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 5: PATIENTS LIST & RESETS */}
+          {/* TAB 6: PATIENTS LIST & RESETS */}
           {activeTab === 'patients' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
@@ -869,7 +955,7 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 6: CLINICAL CHAT */}
+          {/* TAB 7: CLINICAL CHAT */}
           {activeTab === 'chat' && (
             <div className="max-w-4xl mx-auto h-[550px] sm:h-[600px] bg-slate-900 rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
               <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -923,6 +1009,60 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* ADD CLINICAL HISTORY MODAL */}
+      {showAddHistoryModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+              <h3 className="font-bold text-white text-base">Add Treatment Record</h3>
+              <button onClick={() => setShowAddHistoryModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleAddHistoryRecord} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Procedure</label>
+                <input
+                  type="text"
+                  required
+                  value={newHistoryEntry.procedure}
+                  onChange={(e) => setNewHistoryEntry({ ...newHistoryEntry, procedure: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Tooth (e.g. #14, All)</label>
+                <input
+                  type="text"
+                  required
+                  value={newHistoryEntry.tooth}
+                  onChange={(e) => setNewHistoryEntry({ ...newHistoryEntry, tooth: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Clinical Notes & Observations</label>
+                <textarea
+                  rows="3"
+                  required
+                  value={newHistoryEntry.notes}
+                  onChange={(e) => setNewHistoryEntry({ ...newHistoryEntry, notes: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                ></textarea>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowAddHistoryModal(false)} className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
+                  Save Record
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* EDIT CLINIC SCHEDULE MODAL */}
       {showEditClinicModal && activeClinic && (
