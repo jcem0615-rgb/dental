@@ -456,24 +456,18 @@ export default function App() {
     return true;
   });
 
-  const ToothIcon = ({ condition }) => {
-    let fillColor = "#38bdf8";
-    if (condition === 'Caries') fillColor = "#f43f5e";
-    if (condition === 'Filled') fillColor = "#fbbf24";
-    if (condition === 'Extracted') fillColor = "#475569";
-    if (condition === 'Crown') fillColor = "#a855f7";
-    if (condition === 'Root Canal') fillColor = "#ec4899";
+  const ToothBox = ({ condition }) => {
+    let colorBadge = "bg-cyan-500/20 text-cyan-400 border-cyan-500/30";
+    if (condition === 'Caries') colorBadge = "bg-rose-500/20 text-rose-400 border-rose-500/30";
+    if (condition === 'Filled') colorBadge = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+    if (condition === 'Extracted') colorBadge = "bg-slate-700/30 text-slate-500 border-slate-700/50";
+    if (condition === 'Crown') colorBadge = "bg-purple-500/20 text-purple-400 border-purple-500/30";
+    if (condition === 'Root Canal') colorBadge = "bg-pink-500/20 text-pink-400 border-pink-500/30";
 
     return (
-      <svg className="w-6 h-7 mx-auto my-0.5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-          d="M7 3C4.5 3 3 5 3 7.5C3 11 5 13.5 7 16C8.2 17.5 8.5 19.5 9.5 21C10 21.8 11 22 12 22C13 22 14 21.8 14.5 21C15.5 19.5 15.8 17.5 17 16C19 13.5 21 11 21 7.5C21 5 19.5 3 17 3C14.5 3 13 5 12 7C11 5 9.5 3 7 3Z"
-          fill={fillColor}
-          fillOpacity={condition === 'Extracted' ? 0.3 : 0.85}
-          stroke={fillColor}
-          strokeWidth="1.5"
-        />
-      </svg>
+      <div className={`w-full h-8 rounded-lg border flex items-center justify-center text-[10px] font-bold ${colorBadge}`}>
+        {condition ? condition.substring(0, 3).toUpperCase() : 'HLT'}
+      </div>
     );
   };
 
@@ -482,54 +476,49 @@ export default function App() {
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4">
         <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
           <div className="text-center mb-6">
-            <div className="inline-flex p-3 bg-teal-500/10 text-teal-400 rounded-2xl mb-3 border border-teal-500/25">
-              <svg className="w-8 h-8 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-teal-500/10 text-teal-400 rounded-2xl mb-3 border border-teal-500/25 font-black text-xl">
+              D
             </div>
             <h1 className="text-2xl font-bold text-white">DentiClinic PWA</h1>
             <p className="text-slate-400 text-sm mt-1">Dental Practice & Patient Portal</p>
           </div>
 
           {authError && (
-            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-sm flex items-center gap-2">
-              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-              <span>{authError}</span>
+            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-sm">
+              {authError}
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Phone Number or Email</label>
-              <div className="relative">
-                <svg className="w-4 h-4 shrink-0 text-slate-500 absolute left-3 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                <input
-                  type="text"
-                  required
-                  placeholder="09171234567 or email@domain.com"
-                  value={loginIdentifier}
-                  onChange={(e) => setLoginIdentifier(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-3 text-sm text-white focus:outline-none focus:border-teal-500"
-                />
-              </div>
+              <input
+                type="text"
+                required
+                placeholder="09171234567 or email@domain.com"
+                value={loginIdentifier}
+                onChange={(e) => setLoginIdentifier(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-teal-500"
+              />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Password</label>
               <div className="relative">
-                <svg className="w-4 h-4 shrink-0 text-slate-500 absolute left-3 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   placeholder="••••••••"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-10 py-3 text-sm text-white focus:outline-none focus:border-teal-500"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 pr-10 text-sm text-white focus:outline-none focus:border-teal-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3.5 text-slate-500 hover:text-slate-300"
+                  className="absolute right-3 top-3.5 text-xs text-slate-400 hover:text-white font-semibold"
                 >
-                  {showPassword ? <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg> : <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>}
+                  {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
             </div>
@@ -565,10 +554,7 @@ export default function App() {
     return (
       <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl text-slate-100">
-          <div className="flex items-center gap-3 text-amber-400 mb-4">
-            <svg className="w-6 h-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-            <h2 className="text-lg font-bold text-white">Password Change Required</h2>
-          </div>
+          <h2 className="text-lg font-bold text-white mb-2">Password Change Required</h2>
           <p className="text-slate-400 text-sm mb-4">
             Your password was reset by administration. Please set a new secure password.
           </p>
@@ -616,8 +602,8 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       <header className="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-teal-500/10 text-teal-400 rounded-xl border border-teal-500/25 flex items-center justify-center">
-            <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          <div className="w-9 h-9 bg-teal-500/10 text-teal-400 rounded-xl border border-teal-500/25 flex items-center justify-center font-black text-base">
+            D
           </div>
           <div>
             <h1 className="font-bold text-white text-base leading-tight">DentiClinic PWA</h1>
@@ -632,10 +618,9 @@ export default function App() {
           <div className="relative">
             <button
               onClick={() => setShowNotificationCenter(!showNotificationCenter)}
-              className="p-2 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition relative flex items-center justify-center"
-              title="Notifications"
+              className="px-3 py-2 text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition text-xs font-semibold relative"
             >
-              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+              Alerts
               {notifications.some(n => !n.read && (currentUser?.role === 'patient' ? (n.targetRole === 'all' || n.targetRole === 'patient') : n.targetRole !== 'patient')) && (
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-teal-400"></span>
               )}
@@ -696,10 +681,9 @@ export default function App() {
           </div>
           <button
             onClick={() => setCurrentUser(null)}
-            className="p-2 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition flex items-center justify-center"
-            title="Log Out"
+            className="px-3 py-2 text-rose-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition text-xs font-semibold"
           >
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            Log Out
           </button>
         </div>
       </header>
@@ -711,10 +695,7 @@ export default function App() {
           if (myActiveApt) {
             return (
               <div className="bg-teal-500 text-slate-950 px-4 py-2.5 text-xs font-bold flex items-center justify-between shadow-lg">
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 shrink-0 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" /></svg>
-                  <span>Dr. Estrada is calling you into the chair! Please proceed to the dental room.</span>
-                </div>
+                <span>Dr. Estrada is calling you into the chair! Please proceed to the dental room.</span>
                 <span className="bg-slate-950 text-teal-400 px-2 py-0.5 rounded-lg text-[10px]">IN-CHAIR</span>
               </div>
             );
@@ -732,9 +713,8 @@ export default function App() {
       )}
 
       {resetSuccessMessage && (
-        <div className="bg-emerald-500/20 border-b border-emerald-500/30 px-4 py-2.5 text-xs text-emerald-300 flex items-center gap-2">
-          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-          <span>{resetSuccessMessage}</span>
+        <div className="bg-emerald-500/20 border-b border-emerald-500/30 px-4 py-2.5 text-xs text-emerald-300">
+          {resetSuccessMessage}
         </div>
       )}
 
@@ -792,8 +772,7 @@ export default function App() {
               </div>
 
               {currentPatient && isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic) && (
-                <div className="bg-rose-500/10 border border-rose-500/30 p-4 rounded-2xl flex items-start sm:items-center gap-3 text-rose-400">
-                  <svg className="w-5 h-5 shrink-0 mt-0.5 sm:mt-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <div className="bg-rose-500/10 border border-rose-500/30 p-4 rounded-2xl flex items-center gap-3 text-rose-400">
                   <div>
                     <h4 className="font-semibold text-sm text-rose-300">Pre-Anesthesia Hypertension Warning</h4>
                     <p className="text-xs text-rose-400/90 mt-0.5">
@@ -808,10 +787,10 @@ export default function App() {
                   <div className="flex justify-between items-center mb-3">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Upper Arch (Maxillary)</h3>
                     <div className="flex items-center gap-3 text-[10px] text-slate-400">
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-400"></span>Healthy</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500"></span>Caries</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400"></span>Filled</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-500"></span>Extracted</span>
+                      <span>HLT: Healthy</span>
+                      <span>Car: Caries</span>
+                      <span>Fil: Filled</span>
+                      <span>Ext: Extracted</span>
                     </div>
                   </div>
                   <div className="grid gap-1.5 sm:gap-2 min-w-[750px]" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
@@ -832,7 +811,7 @@ export default function App() {
                           }`}
                         >
                           <span className="text-[10px] font-mono text-slate-400">#{num}</span>
-                          <ToothIcon condition={cond} />
+                          <ToothBox condition={cond} />
                           <span className="text-[9px] font-bold truncate max-w-full text-slate-300">{cond || 'Healthy'}</span>
                         </button>
                       );
@@ -860,7 +839,7 @@ export default function App() {
                           }`}
                         >
                           <span className="text-[10px] font-mono text-slate-400">#{num}</span>
-                          <ToothIcon condition={cond} />
+                          <ToothBox condition={cond} />
                           <span className="text-[9px] font-bold truncate max-w-full text-slate-300">{cond || 'Healthy'}</span>
                         </button>
                       );
@@ -902,9 +881,9 @@ export default function App() {
                 {currentUser?.role === 'assistant' && (
                   <button
                     onClick={() => setShowWalkInModal(true)}
-                    className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5"
+                    className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs"
                   >
-                    <span>Register Walk-In</span>
+                    Register Walk-In
                   </button>
                 )}
               </div>
@@ -923,7 +902,7 @@ export default function App() {
                             setSelectedPatientId(activeChairPatient.patientId);
                             setShowConsultationModal(true);
                           }}
-                          className="w-full mt-2 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs shadow-md shadow-teal-500/20"
+                          className="w-full mt-2 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs"
                         >
                           Open Encounter & Set Price
                         </button>
@@ -956,7 +935,7 @@ export default function App() {
                           {currentUser?.role === 'dentist' && apt.status !== 'In-Chair' && (
                             <button
                               onClick={() => handleCallPatientInQueue(apt)}
-                              className="px-3.5 py-1.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs shadow-md shadow-teal-500/20 hover:bg-teal-400 transition"
+                              className="px-3.5 py-1.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs hover:bg-teal-400 transition"
                             >
                               Come In
                             </button>
@@ -996,9 +975,9 @@ export default function App() {
                     </select>
                     <button
                       onClick={() => setShowAddHistoryModal(true)}
-                      className="px-3.5 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shrink-0"
+                      className="px-3.5 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs shrink-0"
                     >
-                      <span>Add Record</span>
+                      Add Record
                     </button>
                   </div>
                 )}
@@ -1104,7 +1083,7 @@ export default function App() {
                     onClick={() => setShowBookingModal(true)}
                     className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
                   >
-                    <span>Book Appointment</span>
+                    Book Appointment
                   </button>
                 )}
               </div>
@@ -1139,7 +1118,7 @@ export default function App() {
                                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
                                   : 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
                               }`}>
-                                <span>Paid via {apt.paymentMethod || 'GCash'}</span>
+                                Paid via {apt.paymentMethod || 'GCash'}
                               </span>
                             ) : (
                               currentUser?.role !== 'patient' ? (
@@ -1169,9 +1148,7 @@ export default function App() {
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-base sm:text-lg font-bold text-white">Daily History & Monthly Sales Monitoring</h2>
-                  </div>
+                  <h2 className="text-base sm:text-lg font-bold text-white mb-1">Daily History & Monthly Sales Monitoring</h2>
                   <p className="text-xs text-slate-400">Select any calendar date to audit transactions and revenue analytics.</p>
                 </div>
 
@@ -1291,9 +1268,9 @@ export default function App() {
                 </div>
                 <button
                   onClick={() => setShowNewPatientModal(true)}
-                  className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs"
                 >
-                  <span>Register Patient</span>
+                  Register Patient
                 </button>
               </div>
 
@@ -1404,8 +1381,8 @@ export default function App() {
                   onChange={(e) => setChatInputText(e.target.value)}
                   className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
                 />
-                <button type="submit" className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1">
-                  <span>Send</span>
+                <button type="submit" className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
+                  Send
                 </button>
               </form>
             </div>
@@ -1980,24 +1957,24 @@ export default function App() {
                 onClick={() => {
                   setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed', paymentMethod: 'Cash' } : a));
                   setShowPaymentModal(false);
-                  addNotification('Payment Confirmed', `Cash payment of ₱{activePaymentApt.amount} processed.`, 'staff');
-                  addNotification('Payment Received', `Your payment of ₱{activePaymentApt.amount} via Cash was confirmed.`, 'patient');
+                  addNotification('Payment Confirmed', `Cash payment processed.`, 'staff');
+                  addNotification('Payment Received', `Your payment was confirmed.`, 'patient');
                 }}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-600/20"
               >
-                <span>Paid by Cash</span>
+                Paid by Cash
               </button>
 
               <button
                 onClick={() => {
                   setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed', paymentMethod: 'GCash' } : a));
                   setShowPaymentModal(false);
-                  addNotification('Payment Confirmed', `GCash payment of ₱{activePaymentApt.amount} processed.`, 'staff');
-                  addNotification('Payment Received', `Your payment of ₱{activePaymentApt.amount} via GCash was confirmed.`, 'patient');
+                  addNotification('Payment Confirmed', `GCash payment processed.`, 'staff');
+                  addNotification('Payment Received', `Your payment was confirmed.`, 'patient');
                 }}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20"
               >
-                <span>Paid by GCash</span>
+                Paid by GCash
               </button>
             </div>
 
