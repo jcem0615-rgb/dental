@@ -3,11 +3,9 @@ import {
   Activity,
   Calendar,
   Users,
-  CreditCard,
   FileText,
   MessageSquare,
   ShieldAlert,
-  Search,
   Plus,
   Lock,
   User,
@@ -17,7 +15,6 @@ import {
   LogOut,
   Send,
   AlertTriangle,
-  QrCode,
   CheckCircle2,
   X,
   Bell,
@@ -122,25 +119,7 @@ export default function App() {
 
   const [showNewPatientModal, setShowNewPatientModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showEditClinicModal, setShowEditClinicModal] = useState(false);
-  const [showAddHistoryModal, setShowAddHistoryModal] = useState(false);
   const [showConsultationModal, setShowConsultationModal] = useState(false);
-  const [activeClinic, setActiveClinic] = useState(null);
-  const [activePaymentApt, setActivePaymentApt] = useState(null);
-
-  const [newPatientData, setNewPatientData] = useState({
-    name: '', phone: '', email: '', gender: 'Female', age: 30, password: 'password123',
-    systolic: 120, diastolic: 80, hr: 72, spo2: 98, temp: 36.5, weight: 60
-  });
-
-  const [bookingData, setBookingData] = useState({
-    service: 'Dental Cleaning', clinicName: 'DentiClinic - Malasiqui Main', date: '', time: '09:00 AM', amount: 1200
-  });
-
-  const [newHistoryEntry, setNewHistoryEntry] = useState({
-    procedure: 'Composite Filling', tooth: '#1', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: ''
-  });
 
   const [consultationData, setConsultationData] = useState({
     chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: ''
@@ -215,18 +194,6 @@ export default function App() {
     addNotification('Security', 'Password updated successfully.');
   };
 
-  const triggerPasswordReset = (targetId, type) => {
-    if (type === 'patient') {
-      setPatients(prev => prev.map(p => p.id === targetId ? { ...p, password: 'password123', mustChangePassword: true } : p));
-      setResetSuccessMessage(`Password for patient ${targetId} reset to 'password123'.`);
-      addNotification('Security Audit', `Admin triggered password reset for patient ${targetId}.`);
-    } else if (type === 'assistant') {
-      setAssistants(prev => prev.map(a => a.id === targetId ? { ...a, password: 'password123', mustChangePassword: true } : a));
-      setResetSuccessMessage(`Password for assistant ${targetId} reset to 'password123'.`);
-    }
-    setTimeout(() => setResetSuccessMessage(''), 4000);
-  };
-
   const quickSwitch = (role) => {
     if (role === 'dentist') {
       setCurrentUser({ id: 'DOC-1', name: 'Dr. Estrada, DDM', role: 'dentist', email: 'admin@denticlinic.ph' });
@@ -248,60 +215,6 @@ export default function App() {
 
   const isHypertensive = (sys, dia) => sys >= 140 || dia >= 90;
 
-  const handleCreatePatient = (e) => {
-    e.preventDefault();
-    const newId = `P-${Math.floor(100 + Math.random() * 900)}`;
-    const newP = {
-      id: newId,
-      name: newPatientData.name,
-      phone: newPatientData.phone,
-      email: newPatientData.email,
-      gender: newPatientData.gender,
-      age: parseInt(newPatientData.age, 10),
-      password: newPatientData.password || 'password123',
-      mustChangePassword: false,
-      vitals: {
-        systolic: parseInt(newPatientData.systolic, 10),
-        diastolic: parseInt(newPatientData.diastolic, 10),
-        hr: parseInt(newPatientData.hr, 10),
-        spo2: parseInt(newPatientData.spo2, 10),
-        temp: parseFloat(newPatientData.temp),
-        weight: parseFloat(newPatientData.weight)
-      },
-      conditions: {},
-      history: []
-    };
-
-    setPatients([newP, ...patients]);
-    setSelectedPatientId(newId);
-    setShowNewPatientModal(false);
-    addNotification('Patient Registration', `Successfully registered patient ${newPatientData.name} (${newId}).`);
-  };
-
-  const handleAddHistoryRecord = (e) => {
-    e.preventDefault();
-    if (!currentPatient) return;
-    const entry = {
-      id: `H-${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
-      procedure: newHistoryEntry.procedure,
-      tooth: newHistoryEntry.tooth,
-      clinic: newHistoryEntry.clinic,
-      doctor: newHistoryEntry.doctor,
-      notes: newHistoryEntry.notes
-    };
-
-    setPatients(patients.map(p => {
-      if (p.id === currentPatient.id) {
-        return { ...p, history: [entry, ...(p.history || [])] };
-      }
-      return p;
-    }));
-    setShowAddHistoryModal(false);
-    setNewHistoryEntry({ procedure: 'Composite Filling', tooth: '#1', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: '' });
-    addNotification('Clinical Charting', `Added procedure record for ${currentPatient.name}`);
-  };
-
   const handleSaveConsultation = (e) => {
     e.preventDefault();
     if (!currentPatient) return;
@@ -322,25 +235,9 @@ export default function App() {
       return p;
     }));
 
-    if (consultationData.followUpDate) {
-      const followUpApt = {
-        id: `APT-${Date.now()}`,
-        patientId: currentPatient.id,
-        patientName: currentPatient.name,
-        service: 'Follow-up Consultation',
-        clinicName: 'DentiClinic - Malasiqui Main',
-        date: consultationData.followUpDate,
-        time: '10:00 AM',
-        status: 'Scheduled',
-        amount: 0,
-        paid: true
-      };
-      setAppointments(prev => [followUpApt, ...prev]);
-    }
-
     setShowConsultationModal(false);
     setConsultationData({ chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: '' });
-    addNotification('Consultation Saved', `Recorded consultation & follow-up for ${currentPatient.name}.`);
+    addNotification('Consultation Saved', `Recorded consultation for ${currentPatient.name}.`);
   };
 
   const updateToothCondition = (toothNum, cond) => {
@@ -369,6 +266,7 @@ export default function App() {
     addNotification('New Message', 'Message sent.');
   };
 
+  // Messenger logic: Filter messages between current user and the selected recipient thread
   const activeChatMessages = messages.filter(msg => 
     (msg.senderId === currentUser?.id && msg.receiverId === chatRecipientId) ||
     (msg.senderId === chatRecipientId && msg.receiverId === currentUser?.id)
@@ -462,198 +360,4 @@ export default function App() {
 
           <div className="mt-6 pt-4 border-t border-slate-800">
             <p className="text-xs text-slate-400 text-center mb-3">Quick Demo Access (Select Role):</p>
-            <div className="grid grid-cols-3 gap-2">
-              <button onClick={() => quickSwitch('dentist')} className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-teal-400">
-                Dentist
-              </button>
-              <button onClick={() => quickSwitch('assistant')} className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-amber-400">
-                Assistant
-              </button>
-              <button onClick={() => quickSwitch('patient')} className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-blue-400">
-                Patient
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (showForcePasswordModal) {
-    return (
-      <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-          <div className="flex items-center gap-3 text-amber-400 mb-4">
-            <Lock className="w-6 h-6" />
-            <h2 className="text-lg font-bold text-white">Password Change Required</h2>
-          </div>
-          <p className="text-slate-400 text-sm mb-4">
-            Your password was reset by administration. Please set a new secure password.
-          </p>
-
-          {passwordError && (
-            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-sm">
-              {passwordError}
-            </div>
-          )}
-
-          <form onSubmit={handleForcePasswordChange} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">New Password</label>
-              <input
-                type="password"
-                required
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Confirm New Password</label>
-              <input
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold py-3 rounded-xl text-sm"
-            >
-              Update Password & Continue
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      <header className="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-teal-500/10 text-teal-400 rounded-xl border border-teal-500/20">
-            <Activity className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="font-bold text-white text-base leading-tight">DentiClinic PWA</h1>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 capitalize">{currentUser.role} Portal</span>
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <button
-              onClick={() => setShowNotificationCenter(!showNotificationCenter)}
-              className="p-2 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition relative"
-              title="Notifications"
-            >
-              <Bell className="w-4 h-4" />
-              {notifications.some(n => !n.read) && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-teal-400"></span>
-              )}
-            </button>
-
-            {showNotificationCenter && (
-              <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 z-50">
-                <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
-                  <h4 className="font-bold text-xs uppercase text-slate-300">System Notifications</h4>
-                  <button
-                    onClick={() => setNotifications(notifications.map(n => ({ ...n, read: true })))}
-                    className="text-[10px] text-teal-400 hover:underline"
-                  >
-                    Mark read
-                  </button>
-                </div>
-                <div className="space-y-2.5 max-h-64 overflow-y-auto">
-                  {notifications.map(n => (
-                    <div key={n.id} className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50 text-xs">
-                      <div className="flex justify-between font-semibold text-white mb-0.5">
-                        <span>{n.title}</span>
-                        <span className="text-[10px] text-slate-400">{n.time}</span>
-                      </div>
-                      <p className="text-slate-300">{n.text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="text-right hidden sm:block">
-            <div className="text-sm font-semibold text-white">{currentUser.name}</div>
-            <div className="text-xs text-slate-400">{currentUser.email || currentUser.phone}</div>
-          </div>
-          <button
-            onClick={() => setCurrentUser(null)}
-            className="p-2 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition"
-            title="Log Out"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-      </header>
-
-      {resetSuccessMessage && (
-        <div className="bg-emerald-500/20 border-b border-emerald-500/30 px-4 py-2.5 text-xs text-emerald-300 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>{resetSuccessMessage}</span>
-        </div>
-      )}
-
-      <div className="flex-1 flex flex-col md:flex-row">
-        <nav className="bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1.5 overflow-x-auto shrink-0">
-          {[
-            { id: 'odontogram', label: 'Odontogram', icon: Activity, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'consultation', label: 'Consultations & Follow-up', icon: Stethoscope, roles: ['dentist', 'assistant'] },
-            { id: 'history', label: 'Medical History', icon: FileText, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'clinics', label: 'Clinics & Branches', icon: Building2, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'appointments', label: 'Appointments', icon: Calendar, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'vitals', label: 'Vital Signs', icon: ShieldAlert, roles: ['dentist', 'assistant'] },
-            { id: 'patients', label: 'Patients List', icon: Users, roles: ['dentist', 'assistant'] },
-            { id: 'chat', label: 'Clinical Chat', icon: MessageSquare, roles: ['dentist', 'assistant', 'patient'] },
-          ]
-            .filter(tab => tab.roles.includes(currentUser.role))
-            .map(tab => {
-              const TabIcon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition shrink-0 whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20'
-                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                  }`}
-                >
-                  <TabIcon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-        </nav>
-
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
-          {activeTab === 'odontogram' && (
-            <div className="space-y-6 max-w-5xl mx-auto">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
-                <div>
-                  <h2 className="text-base sm:text-lg font-bold text-white">32-Tooth Universal Odontogram</h2>
-                  <p className="text-xs text-slate-400">Click any tooth to examine or update its medical condition</p>
-                </div>
-
-                {currentUser.role !== 'patient' && (
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <label className="text-xs text-slate-400 shrink-0">Patient:</label>
-                    <select
-                      value={selectedPatientId}
-                      onChange={(e) => setSelectedPatientId(e.target.value)}
-                      className="w-full sm:w-auto bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-2 focus:outline-none focus:border-teal-500"
-                    >
-                      {patients.map(p => (
-                        <option key={p.id} value={p.id}>{p.name} ({p.
+            <div className="grid grid-cols-3
