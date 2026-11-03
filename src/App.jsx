@@ -19,13 +19,12 @@ import {
   AlertTriangle,
   QrCode,
   CheckCircle2,
-  Printer,
   X
 } from 'lucide-react';
 
 export default function App() {
   // Auth State
-  const [currentUser, setCurrentUser] = useState(null); // { id, name, role: 'dentist'|'assistant'|'patient', phone, email, mustChangePassword }
+  const [currentUser, setCurrentUser] = useState(null);
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -100,7 +99,6 @@ export default function App() {
   // Active Selection State
   const [selectedPatientId, setSelectedPatientId] = useState('P-101');
   const [selectedTooth, setSelectedTooth] = useState(1);
-  const [selectedCondition, setSelectedCondition] = useState('Caries');
   const [chatRecipientId, setChatRecipientId] = useState('P-101');
   const [chatInputText, setChatInputText] = useState('');
 
@@ -108,7 +106,6 @@ export default function App() {
   const [showNewPatientModal, setShowNewPatientModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showRxModal, setShowRxModal] = useState(false);
   const [activePaymentApt, setActivePaymentApt] = useState(null);
 
   // Form States
@@ -132,27 +129,21 @@ export default function App() {
     e.preventDefault();
     setAuthError('');
 
-    // Doctor Hardcoded Check
     if ((loginIdentifier === 'doctor' || loginIdentifier === 'admin@denticlinic.ph' || loginIdentifier === '09170000000') && loginPassword === 'admin123') {
-      const docUser = { id: 'DOC-1', name: 'Dr. Estrada, DDM', role: 'dentist', phone: '09170000000', email: 'admin@denticlinic.ph', mustChangePassword: false };
-      setCurrentUser(docUser);
+      setCurrentUser({ id: 'DOC-1', name: 'Dr. Estrada, DDM', role: 'dentist', phone: '09170000000', email: 'admin@denticlinic.ph', mustChangePassword: false });
       return;
     }
 
-    // Assistant Check
     const foundAssistant = assistants.find(a => (a.phone === loginIdentifier || a.email.toLowerCase() === loginIdentifier.toLowerCase()) && a.password === loginPassword);
     if (foundAssistant) {
-      const userObj = { ...foundAssistant, role: 'assistant' };
-      setCurrentUser(userObj);
+      setCurrentUser({ ...foundAssistant, role: 'assistant' });
       if (foundAssistant.mustChangePassword) setShowForcePasswordModal(true);
       return;
     }
 
-    // Patient Check
     const foundPatient = patients.find(p => (p.phone === loginIdentifier || p.email.toLowerCase() === loginIdentifier.toLowerCase()) && p.password === loginPassword);
     if (foundPatient) {
-      const userObj = { ...foundPatient, role: 'patient' };
-      setCurrentUser(userObj);
+      setCurrentUser({ ...foundPatient, role: 'patient' });
       setSelectedPatientId(foundPatient.id);
       if (foundPatient.mustChangePassword) setShowForcePasswordModal(true);
       return;
@@ -161,7 +152,6 @@ export default function App() {
     setAuthError('Invalid credentials. Check your email/phone number or password.');
   };
 
-  // Force Password Change Handler
   const handleForcePasswordChange = (e) => {
     e.preventDefault();
     if (newPassword.length < 6) {
@@ -186,19 +176,17 @@ export default function App() {
     setPasswordError('');
   };
 
-  // Reset Password (Admin / Staff Trigger)
   const triggerPasswordReset = (targetId, type) => {
     if (type === 'patient') {
       setPatients(prev => prev.map(p => p.id === targetId ? { ...p, password: 'password123', mustChangePassword: true } : p));
-      setResetSuccessMessage(`Password for patient ${targetId} reset to 'password123'. Next login requires change.`);
+      setResetSuccessMessage(`Password for patient ${targetId} reset to 'password123'.`);
     } else if (type === 'assistant') {
       setAssistants(prev => prev.map(a => a.id === targetId ? { ...a, password: 'password123', mustChangePassword: true } : a));
-      setResetSuccessMessage(`Password for assistant ${targetId} reset to 'password123'. Next login requires change.`);
+      setResetSuccessMessage(`Password for assistant ${targetId} reset to 'password123'.`);
     }
     setTimeout(() => setResetSuccessMessage(''), 4000);
   };
 
-  // Quick Demo Login Switcher
   const quickSwitch = (role) => {
     if (role === 'dentist') {
       setCurrentUser({ id: 'DOC-1', name: 'Dr. Estrada, DDM', role: 'dentist', email: 'admin@denticlinic.ph' });
@@ -210,13 +198,9 @@ export default function App() {
     }
   };
 
-  // Current Selected Patient Data
   const currentPatient = patients.find(p => p.id === selectedPatientId) || patients[0];
-
-  // Pre-Anesthesia BP Evaluation
   const isHypertensive = (sys, dia) => sys >= 140 || dia >= 90;
 
-  // Add Patient Handler
   const handleCreatePatient = (e) => {
     e.preventDefault();
     const newId = `P-${Math.floor(100 + Math.random() * 900)}`;
@@ -246,19 +230,16 @@ export default function App() {
     setShowNewPatientModal(false);
   };
 
-  // Toggle Tooth Condition
   const updateToothCondition = (toothNum, cond) => {
     if (!currentPatient) return;
     setPatients(patients.map(p => {
       if (p.id === currentPatient.id) {
-        const nextConds = { ...p.conditions, [toothNum]: cond };
-        return { ...p, conditions: nextConds };
+        return { ...p, conditions: { ...p.conditions, [toothNum]: cond } };
       }
       return p;
     }));
   };
 
-  // Send Chat Message
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!chatInputText.trim() || !currentUser) return;
@@ -288,7 +269,7 @@ export default function App() {
           </div>
 
           {authError && (
-            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-lg text-sm flex items-center gap-2">
+            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-sm flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>{authError}</span>
             </div>
@@ -298,14 +279,14 @@ export default function App() {
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Phone Number or Email</label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                <User className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
                 <input
                   type="text"
                   required
                   placeholder="09171234567 or email@domain.com"
                   value={loginIdentifier}
                   onChange={(e) => setLoginIdentifier(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-4 py-3 text-sm text-white focus:outline-none focus:border-teal-500"
                 />
               </div>
             </div>
@@ -313,19 +294,19 @@ export default function App() {
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Password</label>
               <div className="relative">
-                <Key className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                <Key className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   placeholder="••••••••"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-10 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-10 py-3 text-sm text-white focus:outline-none focus:border-teal-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-slate-500 hover:text-slate-300"
+                  className="absolute right-3 top-3.5 text-slate-500 hover:text-slate-300"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -334,22 +315,22 @@ export default function App() {
 
             <button
               type="submit"
-              className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold py-2.5 rounded-xl transition duration-200"
+              className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold py-3 rounded-xl transition duration-200 text-sm shadow-lg shadow-teal-500/10"
             >
               Sign In to Account
             </button>
           </form>
 
           <div className="mt-6 pt-4 border-t border-slate-800">
-            <p className="text-xs text-slate-400 text-center mb-3">Quick Demo Access (Click to Test Role):</p>
+            <p className="text-xs text-slate-400 text-center mb-3">Quick Demo Access (Select Role):</p>
             <div className="grid grid-cols-3 gap-2">
-              <button onClick={() => quickSwitch('dentist')} className="py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-teal-400">
+              <button onClick={() => quickSwitch('dentist')} className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-teal-400">
                 Dentist
               </button>
-              <button onClick={() => quickSwitch('assistant')} className="py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-amber-400">
+              <button onClick={() => quickSwitch('assistant')} className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-amber-400">
                 Assistant
               </button>
-              <button onClick={() => quickSwitch('patient')} className="py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-blue-400">
+              <button onClick={() => quickSwitch('patient')} className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-blue-400">
                 Patient
               </button>
             </div>
@@ -369,11 +350,11 @@ export default function App() {
             <h2 className="text-lg font-bold text-white">Password Change Required</h2>
           </div>
           <p className="text-slate-400 text-sm mb-4">
-            Your account password was reset by clinic administration. Please set a new password before continuing.
+            Your password was reset by administration. Please set a new secure password.
           </p>
 
           {passwordError && (
-            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-lg text-sm">
+            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-sm">
               {passwordError}
             </div>
           )}
@@ -386,7 +367,7 @@ export default function App() {
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-teal-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
               />
             </div>
             <div>
@@ -396,12 +377,12 @@ export default function App() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-teal-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
               />
             </div>
             <button
               type="submit"
-              className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold py-2.5 rounded-xl text-sm"
+              className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold py-3 rounded-xl text-sm"
             >
               Update Password & Continue
             </button>
@@ -411,7 +392,7 @@ export default function App() {
     );
   }
 
-  // MAIN DASHBOARD APP
+  // RESPONSIVE DASHBOARD APP
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Top Header */}
@@ -444,18 +425,17 @@ export default function App() {
         </div>
       </header>
 
-      {/* Global Admin Reset Banner Notice */}
+      {/* Global Notice Banner */}
       {resetSuccessMessage && (
-        <div className="bg-emerald-500/20 border-b border-emerald-500/30 px-4 py-2 text-xs text-emerald-300 flex items-center gap-2">
+        <div className="bg-emerald-500/20 border-b border-emerald-500/30 px-4 py-2.5 text-xs text-emerald-300 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{resetSuccessMessage}</span>
         </div>
       )}
 
-      {/* Main Layout Body */}
+      {/* Main Layout Body: Adaptive Sidebar/Topbar for Mobile & Desktop */}
       <div className="flex-1 flex flex-col md:flex-row">
-        {/* Mobile / Sidebar Navigation Tabs */}
-        <nav className="bg-slate-900 border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1 overflow-x-auto shrink-0">
+        <nav className="bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1.5 overflow-x-auto shrink-0 shadow-inner">
           {[
             { id: 'odontogram', label: 'Odontogram', icon: Activity, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'vitals', label: 'Vital Signs', icon: ShieldAlert, roles: ['dentist', 'assistant'] },
@@ -470,9 +450,9 @@ export default function App() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition shrink-0 ${
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition shrink-0 whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20'
+                      ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-sm'
                       : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                   }`}
                 >
@@ -483,24 +463,24 @@ export default function App() {
             })}
         </nav>
 
-        {/* Content Panel */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-          {/* TAB 1: ODONTOGRAM CHART & DENTAL MAP */}
+        {/* Dynamic Content Panel */}
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
+          {/* TAB 1: ODONTOGRAM CHART */}
           {activeTab === 'odontogram' && (
             <div className="space-y-6 max-w-5xl mx-auto">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
-                  <h2 className="text-lg font-bold text-white">32-Tooth Universal Odontogram</h2>
-                  <p className="text-xs text-slate-400">Select patient and map dental conditions & surfaces</p>
+                  <h2 className="text-base sm:text-lg font-bold text-white">32-Tooth Universal Odontogram</h2>
+                  <p className="text-xs text-slate-400">Map dental conditions & surfaces</p>
                 </div>
 
                 {currentUser.role !== 'patient' && (
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs text-slate-400">Patient:</label>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <label className="text-xs text-slate-400 shrink-0">Patient:</label>
                     <select
                       value={selectedPatientId}
                       onChange={(e) => setSelectedPatientId(e.target.value)}
-                      className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-2 focus:outline-none focus:border-teal-500"
+                      className="w-full sm:w-auto bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-2 focus:outline-none focus:border-teal-500"
                     >
                       {patients.map(p => (
                         <option key={p.id} value={p.id}>{p.name} ({p.id})</option>
@@ -510,32 +490,32 @@ export default function App() {
                 )}
               </div>
 
-              {/* Hypertensive Alert Indicator */}
+              {/* Hypertensive Warning */}
               {currentPatient && isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic) && (
-                <div className="bg-rose-500/10 border border-rose-500/30 p-4 rounded-2xl flex items-center gap-3 text-rose-400">
-                  <AlertTriangle className="w-6 h-6 shrink-0" />
+                <div className="bg-rose-500/10 border border-rose-500/30 p-4 rounded-2xl flex items-start sm:items-center gap-3 text-rose-400">
+                  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 sm:mt-0" />
                   <div>
                     <h4 className="font-semibold text-sm text-rose-300">Pre-Anesthesia Hypertension Warning</h4>
                     <p className="text-xs text-rose-400/90 mt-0.5">
-                      Patient BP is {currentPatient.vitals.systolic}/{currentPatient.vitals.diastolic} mmHg. Exercise extreme caution prior to administering vasoconstrictor local anesthesia.
+                      Patient BP is {currentPatient.vitals.systolic}/{currentPatient.vitals.diastolic} mmHg. Exercise caution with vasoconstrictor anesthetics.
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Tooth Map Grid */}
-              <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-8">
+              {/* Tooth Grid */}
+              <div className="bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-6 overflow-x-auto">
                 {/* Upper Arch */}
-                <div>
+                <div className="min-w-[600px] sm:min-w-0">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">Upper Arch (Maxillary)</h3>
-                  <div className="grid grid-cols-8 sm:grid-cols-16 gap-2">
+                  <div className="grid grid-cols-16 gap-1.5 sm:gap-2">
                     {Array.from({ length: 16 }, (_, i) => i + 1).map(num => {
                       const cond = currentPatient?.conditions[num];
                       return (
                         <button
                           key={num}
                           onClick={() => setSelectedTooth(num)}
-                          className={`p-2 rounded-xl border flex flex-col items-center justify-between text-xs transition min-h-[64px] ${
+                          className={`p-1.5 sm:p-2 rounded-xl border flex flex-col items-center justify-between text-xs transition min-h-[56px] sm:min-h-[64px] ${
                             selectedTooth === num
                               ? 'border-teal-500 bg-teal-500/10 text-teal-400'
                               : cond === 'Caries'
@@ -545,8 +525,8 @@ export default function App() {
                               : 'border-slate-800 bg-slate-800/50 text-slate-300 hover:border-slate-700'
                           }`}
                         >
-                          <span className="text-[10px] text-slate-400">#{num}</span>
-                          <span className="font-bold text-xs my-1">{cond ? cond[0] : '✓'}</span>
+                          <span className="text-[9px] sm:text-[10px] text-slate-400">#{num}</span>
+                          <span className="font-bold text-[10px] sm:text-xs my-1">{cond ? cond[0] : '✓'}</span>
                         </button>
                       );
                     })}
@@ -554,16 +534,16 @@ export default function App() {
                 </div>
 
                 {/* Lower Arch */}
-                <div>
+                <div className="min-w-[600px] sm:min-w-0 pt-2">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">Lower Arch (Mandibular)</h3>
-                  <div className="grid grid-cols-8 sm:grid-cols-16 gap-2">
+                  <div className="grid grid-cols-16 gap-1.5 sm:gap-2">
                     {Array.from({ length: 16 }, (_, i) => 32 - i).map(num => {
                       const cond = currentPatient?.conditions[num];
                       return (
                         <button
                           key={num}
                           onClick={() => setSelectedTooth(num)}
-                          className={`p-2 rounded-xl border flex flex-col items-center justify-between text-xs transition min-h-[64px] ${
+                          className={`p-1.5 sm:p-2 rounded-xl border flex flex-col items-center justify-between text-xs transition min-h-[56px] sm:min-h-[64px] ${
                             selectedTooth === num
                               ? 'border-teal-500 bg-teal-500/10 text-teal-400'
                               : cond === 'Caries'
@@ -573,29 +553,26 @@ export default function App() {
                               : 'border-slate-800 bg-slate-800/50 text-slate-300 hover:border-slate-700'
                           }`}
                         >
-                          <span className="text-[10px] text-slate-400">#{num}</span>
-                          <span className="font-bold text-xs my-1">{cond ? cond[0] : '✓'}</span>
+                          <span className="text-[9px] sm:text-[10px] text-slate-400">#{num}</span>
+                          <span className="font-bold text-[10px] sm:text-xs my-1">{cond ? cond[0] : '✓'}</span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Tooth Editor Controls */}
+                {/* Tooth Controls */}
                 {currentUser.role !== 'patient' && (
-                  <div className="pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-slate-400">Selected Tooth: #{selectedTooth}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-wrap">
+                  <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <span className="text-xs font-semibold text-teal-400">Selected Tooth: #{selectedTooth}</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       {['Healthy', 'Caries', 'Filled', 'Extracted', 'Crown', 'Root Canal'].map(cond => (
                         <button
                           key={cond}
                           onClick={() => updateToothCondition(selectedTooth, cond)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 border border-slate-700 hover:border-teal-500 text-slate-300"
+                          className="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-800 border border-slate-700 hover:border-teal-500 text-slate-300"
                         >
-                          Mark {cond}
+                          {cond}
                         </button>
                       ))}
                     </div>
@@ -605,52 +582,50 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 2: VITAL SIGNS LOGGING & SAFETY INTAKE */}
+          {/* TAB 2: VITALS INTAKE */}
           {activeTab === 'vitals' && (
             <div className="space-y-6 max-w-4xl mx-auto">
-              <div className="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                <div>
-                  <h2 className="text-lg font-bold text-white">Pre-Anesthesia Vital Signs Intake</h2>
-                  <p className="text-xs text-slate-400">Log patient blood pressure and cardiovascular indicators</p>
-                </div>
+              <div className="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
+                <h2 className="text-base sm:text-lg font-bold text-white">Pre-Anesthesia Vital Signs Intake</h2>
+                <p className="text-xs text-slate-400">Review patient cardiovascular screening</p>
               </div>
 
               {currentPatient && (
-                <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-6">
-                  <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div className="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-2">
                     <div>
                       <h3 className="font-bold text-white text-base">{currentPatient.name}</h3>
                       <p className="text-xs text-slate-400">ID: {currentPatient.id} | Age: {currentPatient.age} | Gender: {currentPatient.gender}</p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold self-start sm:self-auto ${
                       isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic)
                         ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                         : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                     }`}>
-                      {isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic) ? 'Hypertensive Warning' : 'Normal Anesthesia Risk'}
+                      {isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic) ? 'Hypertensive' : 'Normal Risk'}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
                       <div className="text-xs text-slate-400 mb-1">Blood Pressure</div>
-                      <div className="text-xl font-bold text-white">{currentPatient.vitals.systolic} / {currentPatient.vitals.diastolic} <span className="text-xs text-slate-400">mmHg</span></div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.systolic} / {currentPatient.vitals.diastolic} <span className="text-xs text-slate-400">mmHg</span></div>
                     </div>
                     <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
                       <div className="text-xs text-slate-400 mb-1">Heart Rate</div>
-                      <div className="text-xl font-bold text-white">{currentPatient.vitals.hr} <span className="text-xs text-slate-400">bpm</span></div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.hr} <span className="text-xs text-slate-400">bpm</span></div>
                     </div>
                     <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                      <div className="text-xs text-slate-400 mb-1">Oxygen Saturation</div>
-                      <div className="text-xl font-bold text-white">{currentPatient.vitals.spo2}%</div>
+                      <div className="text-xs text-slate-400 mb-1">Oxygen SpO2</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.spo2}%</div>
                     </div>
                     <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
                       <div className="text-xs text-slate-400 mb-1">Temperature</div>
-                      <div className="text-xl font-bold text-white">{currentPatient.vitals.temp} °C</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.temp} °C</div>
                     </div>
                     <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
                       <div className="text-xs text-slate-400 mb-1">Body Weight</div>
-                      <div className="text-xl font-bold text-white">{currentPatient.vitals.weight} kg</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.weight} kg</div>
                     </div>
                   </div>
                 </div>
@@ -658,18 +633,18 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 3: APPOINTMENTS & GCASH PAYMENTS */}
+          {/* TAB 3: APPOINTMENTS & GCASH */}
           {activeTab === 'appointments' && (
             <div className="space-y-6 max-w-5xl mx-auto">
-              <div className="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
-                  <h2 className="text-lg font-bold text-white">Clinic Appointments & Billing</h2>
-                  <p className="text-xs text-slate-400">Schedule bookings and manage GCash payment invoices</p>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Appointments & Billing</h2>
+                  <p className="text-xs text-slate-400">Manage schedules and GCash payments</p>
                 </div>
                 {currentUser.role === 'patient' && (
                   <button
                     onClick={() => setShowBookingModal(true)}
-                    className="px-4 py-2 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-2"
+                    className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
                   >
                     <Plus className="w-4 h-4" /> Book Appointment
                   </button>
@@ -677,116 +652,120 @@ export default function App() {
               </div>
 
               <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-950 border-b border-slate-800 text-xs text-slate-400 uppercase">
-                    <tr>
-                      <th className="p-4">Patient</th>
-                      <th className="p-4">Service</th>
-                      <th className="p-4">Date & Time</th>
-                      <th className="p-4">Amount</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4 text-right">Payment</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800 text-slate-300">
-                    {appointments.map(apt => (
-                      <tr key={apt.id} className="hover:bg-slate-800/50">
-                        <td className="p-4 font-semibold text-white">{apt.patientName}</td>
-                        <td className="p-4">{apt.service}</td>
-                        <td className="p-4">{apt.date} at {apt.time}</td>
-                        <td className="p-4 font-bold text-white">₱{apt.amount}</td>
-                        <td className="p-4">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            apt.status === 'Confirmed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
-                          }`}>
-                            {apt.status}
-                          </span>
-                        </td>
-                        <td className="p-4 text-right">
-                          {apt.paid ? (
-                            <span className="text-xs text-emerald-400 font-bold flex items-center justify-end gap-1">
-                              <CheckCircle2 className="w-4 h-4" /> Paid via GCash
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => { setActivePaymentApt(apt); setShowPaymentModal(true); }}
-                              className="px-3 py-1 bg-teal-500/10 border border-teal-500/30 text-teal-400 hover:bg-teal-500 hover:text-slate-950 rounded-lg text-xs font-semibold"
-                            >
-                              Pay GCash
-                            </button>
-                          )}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm min-w-[650px]">
+                    <thead className="bg-slate-950 border-b border-slate-800 text-xs text-slate-400 uppercase">
+                      <tr>
+                        <th className="p-4">Patient</th>
+                        <th className="p-4">Service</th>
+                        <th className="p-4">Date & Time</th>
+                        <th className="p-4">Amount</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 text-right">Payment</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800 text-slate-300">
+                      {appointments.map(apt => (
+                        <tr key={apt.id} className="hover:bg-slate-800/50">
+                          <td className="p-4 font-semibold text-white">{apt.patientName}</td>
+                          <td className="p-4">{apt.service}</td>
+                          <td className="p-4">{apt.date} at {apt.time}</td>
+                          <td className="p-4 font-bold text-white">₱{apt.amount}</td>
+                          <td className="p-4">
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                              apt.status === 'Confirmed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+                            }`}>
+                              {apt.status}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right">
+                            {apt.paid ? (
+                              <span className="text-xs text-emerald-400 font-bold flex items-center justify-end gap-1">
+                                <CheckCircle2 className="w-4 h-4" /> Paid via GCash
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => { setActivePaymentApt(apt); setShowPaymentModal(true); }}
+                                className="px-3 py-1.5 bg-teal-500/10 border border-teal-500/30 text-teal-400 hover:bg-teal-500 hover:text-slate-950 rounded-xl text-xs font-semibold"
+                              >
+                                Pay GCash
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
-          {/* TAB 4: PATIENTS LIST & STAFF PASSWORD RESET */}
+          {/* TAB 4: PATIENTS LIST & RESETS */}
           {activeTab === 'patients' && (
             <div className="space-y-6 max-w-5xl mx-auto">
-              <div className="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
-                  <h2 className="text-lg font-bold text-white">Patient Database & Credentials</h2>
-                  <p className="text-xs text-slate-400">Register new records and manage login password resets</p>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Patient Database</h2>
+                  <p className="text-xs text-slate-400">Manage records and reset passwords</p>
                 </div>
                 <button
                   onClick={() => setShowNewPatientModal(true)}
-                  className="px-4 py-2 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-2"
+                  className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
                 >
                   <Plus className="w-4 h-4" /> Register Patient
                 </button>
               </div>
 
               <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-950 border-b border-slate-800 text-xs text-slate-400 uppercase">
-                    <tr>
-                      <th className="p-4">ID & Name</th>
-                      <th className="p-4">Contact Details</th>
-                      <th className="p-4">Age / Gender</th>
-                      <th className="p-4">Vitals BP</th>
-                      <th className="p-4 text-right">Password Control</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800 text-slate-300">
-                    {patients.map(p => (
-                      <tr key={p.id} className="hover:bg-slate-800/50">
-                        <td className="p-4">
-                          <div className="font-bold text-white">{p.name}</div>
-                          <div className="text-xs text-slate-500">{p.id}</div>
-                        </td>
-                        <td className="p-4">
-                          <div>{p.phone}</div>
-                          <div className="text-xs text-slate-400">{p.email}</div>
-                        </td>
-                        <td className="p-4">{p.age} y/o ({p.gender})</td>
-                        <td className="p-4 font-mono text-xs">{p.vitals.systolic}/{p.vitals.diastolic} mmHg</td>
-                        <td className="p-4 text-right">
-                          <button
-                            onClick={() => triggerPasswordReset(p.id, 'patient')}
-                            className="px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-slate-950 rounded-lg text-xs font-semibold"
-                          >
-                            Reset Password
-                          </button>
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm min-w-[650px]">
+                    <thead className="bg-slate-950 border-b border-slate-800 text-xs text-slate-400 uppercase">
+                      <tr>
+                        <th className="p-4">ID & Name</th>
+                        <th className="p-4">Contact</th>
+                        <th className="p-4">Age / Gender</th>
+                        <th className="p-4">Vitals BP</th>
+                        <th className="p-4 text-right">Security</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800 text-slate-300">
+                      {patients.map(p => (
+                        <tr key={p.id} className="hover:bg-slate-800/50">
+                          <td className="p-4">
+                            <div className="font-bold text-white">{p.name}</div>
+                            <div className="text-xs text-slate-500">{p.id}</div>
+                          </td>
+                          <td className="p-4">
+                            <div>{p.phone}</div>
+                            <div className="text-xs text-slate-400">{p.email}</div>
+                          </td>
+                          <td className="p-4">{p.age} y/o ({p.gender})</td>
+                          <td className="p-4 font-mono text-xs">{p.vitals.systolic}/{p.vitals.diastolic} mmHg</td>
+                          <td className="p-4 text-right">
+                            <button
+                              onClick={() => triggerPasswordReset(p.id, 'patient')}
+                              className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-slate-950 rounded-xl text-xs font-semibold"
+                            >
+                              Reset Password
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
-          {/* TAB 5: CLINICAL MESSAGING CHAT */}
+          {/* TAB 5: CLINICAL CHAT */}
           {activeTab === 'chat' && (
-            <div className="max-w-4xl mx-auto h-[600px] bg-slate-900 rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
-              <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+            <div className="max-w-4xl mx-auto h-[550px] sm:h-[600px] bg-slate-900 rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
+              <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <h3 className="font-bold text-white text-base">Clinical Messaging</h3>
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-slate-400">Recipient:</label>
+                  <label className="text-xs text-slate-400">To:</label>
                   <select
                     value={chatRecipientId}
                     onChange={(e) => setChatRecipientId(e.target.value)}
@@ -809,7 +788,7 @@ export default function App() {
                   return (
                     <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                       <div className="text-[10px] text-slate-400 mb-1">{msg.fromName} • {msg.timestamp}</div>
-                      <div className={`p-3 rounded-2xl max-w-sm text-sm ${
+                      <div className={`p-3 rounded-2xl max-w-xs sm:max-w-sm text-sm ${
                         isMe ? 'bg-teal-500 text-slate-950 font-medium' : 'bg-slate-800 text-white border border-slate-700'
                       }`}>
                         {msg.text}
@@ -826,9 +805,9 @@ export default function App() {
                   placeholder="Type clinical message..."
                   value={chatInputText}
                   onChange={(e) => setChatInputText(e.target.value)}
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-teal-500"
+                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
                 />
-                <button type="submit" className="px-4 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1">
+                <button type="submit" className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1">
                   <Send className="w-4 h-4" /> Send
                 </button>
               </form>
@@ -837,19 +816,19 @@ export default function App() {
         </main>
       </div>
 
-      {/* NEW PATIENT MODAL WITH INTEGRATED VITALS INTAKE */}
+      {/* NEW PATIENT MODAL */}
       {showNewPatientModal && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-2xl my-8">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-white text-lg">Register Patient & Initial Vitals</h3>
+              <h3 className="font-bold text-white text-base sm:text-lg">Register Patient & Initial Vitals</h3>
               <button onClick={() => setShowNewPatientModal(false)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleCreatePatient} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Full Name</label>
                   <input
@@ -892,56 +871,55 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Vitals Fillup Section */}
-              <div className="pt-3 border-t border-slate-800">
-                <h4 className="text-xs font-bold uppercase text-teal-400 mb-3">Pre-Anesthesia Baseline Vitals</h4>
+              <div className="pt-2 border-t border-slate-800">
+                <h4 className="text-xs font-bold uppercase text-teal-400 mb-3">Pre-Anesthesia Vitals Baseline</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-1">Systolic BP (mmHg)</label>
+                    <label className="block text-[10px] text-slate-400 mb-1">Systolic BP</label>
                     <input
                       type="number"
                       required
                       value={newPatientData.systolic}
                       onChange={(e) => setNewPatientData({ ...newPatientData, systolic: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-sm text-white"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-1">Diastolic BP (mmHg)</label>
+                    <label className="block text-[10px] text-slate-400 mb-1">Diastolic BP</label>
                     <input
                       type="number"
                       required
                       value={newPatientData.diastolic}
                       onChange={(e) => setNewPatientData({ ...newPatientData, diastolic: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-sm text-white"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-1">Heart Rate (bpm)</label>
+                    <label className="block text-[10px] text-slate-400 mb-1">Heart Rate</label>
                     <input
                       type="number"
                       required
                       value={newPatientData.hr}
                       onChange={(e) => setNewPatientData({ ...newPatientData, hr: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-sm text-white"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="pt-3 flex justify-end gap-3">
+              <div className="pt-2 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setShowNewPatientModal(false)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold"
+                  className="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-teal-500 text-slate-950 rounded-xl text-xs font-bold"
+                  className="px-4 py-2.5 bg-teal-500 text-slate-950 rounded-xl text-xs font-bold"
                 >
-                  Save Patient Record
+                  Save Record
                 </button>
               </div>
             </form>
@@ -974,14 +952,14 @@ export default function App() {
               className="space-y-4"
             >
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Dental Procedure</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Service</label>
                 <select
                   value={bookingData.service}
                   onChange={(e) => {
                     const price = e.target.value === 'Tooth Extraction' ? 1500 : e.target.value === 'Root Canal' ? 4500 : 1200;
                     setBookingData({ ...bookingData, service: e.target.value, amount: price });
                   }}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
                 >
                   <option value="Dental Cleaning">Dental Cleaning (₱1,200)</option>
                   <option value="Tooth Extraction">Tooth Extraction (₱1,500)</option>
@@ -989,20 +967,20 @@ export default function App() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Appointment Date</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Date</label>
                 <input
                   type="date"
                   required
                   value={bookingData.date}
                   onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
                 />
               </div>
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowBookingModal(false)} className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">
+                <button type="button" onClick={() => setShowBookingModal(false)} className="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
+                <button type="submit" className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
                   Confirm Booking
                 </button>
               </div>
@@ -1019,7 +997,7 @@ export default function App() {
             <p className="text-xs text-slate-400 mb-4">{activePaymentApt.service} - ₱{activePaymentApt.amount}</p>
 
             <div className="bg-white p-4 rounded-2xl inline-block mb-4 shadow-lg">
-              <QrCode className="w-36 h-36 text-slate-900 mx-auto" />
+              <QrCode className="w-32 h-32 sm:w-36 sm:h-36 text-slate-900 mx-auto" />
               <div className="text-[10px] text-slate-500 mt-2 font-mono">Merchant: DentiClinic Inc.</div>
             </div>
 
@@ -1028,7 +1006,7 @@ export default function App() {
                 setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed' } : a));
                 setShowPaymentModal(false);
               }}
-              className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20"
             >
               Simulate GCash Paid Confirmation
             </button>
