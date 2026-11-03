@@ -173,9 +173,9 @@ export default function App() {
       return;
     }
 
-    if (currentUser.role === 'patient') {
+    if (currentUser?.role === 'patient') {
       setPatients(prev => prev.map(p => p.id === currentUser.id ? { ...p, password: newPassword, mustChangePassword: false } : p));
-    } else if (currentUser.role === 'assistant') {
+    } else if (currentUser?.role === 'assistant') {
       setAssistants(prev => prev.map(a => a.id === currentUser.id ? { ...a, password: newPassword, mustChangePassword: false } : a));
     }
 
@@ -184,7 +184,7 @@ export default function App() {
     setNewPassword('');
     setConfirmPassword('');
     setPasswordError('');
-    addNotification('Security', 'Password updated successfully.', currentUser.role === 'patient' ? 'patient' : 'staff');
+    addNotification('Security', 'Password updated successfully.', currentUser?.role === 'patient' ? 'patient' : 'staff');
   };
 
   const triggerPasswordReset = (targetId, type) => {
@@ -318,7 +318,7 @@ export default function App() {
       procedure: `${finalServiceName}: ${consultationData.chiefComplaint}`,
       tooth: 'General',
       clinic: 'DentiClinic - Main',
-      doctor: currentUser.name,
+      doctor: currentUser?.name || 'Dr. Estrada',
       notes: `Diagnosis: ${consultationData.diagnosis} | Rx: ${consultationData.prescription} | Follow-up: ${consultationData.followUpDate || 'None'}`
     };
 
@@ -381,7 +381,7 @@ export default function App() {
       procedure: newHistoryEntry.procedure,
       tooth: newHistoryEntry.tooth,
       clinic: newHistoryEntry.clinic,
-      doctor: currentUser.name,
+      doctor: currentUser?.name || 'Dr. Estrada',
       notes: newHistoryEntry.notes
     };
 
@@ -445,7 +445,7 @@ export default function App() {
   const activeChairPatient = appointments.find(a => a.status === 'In-Chair');
 
   const visibleNotifications = notifications.filter(n => {
-    if (currentUser.role === 'patient') {
+    if (currentUser?.role === 'patient') {
       if (n.targetRole !== 'all' && n.targetRole !== 'patient') return false;
     } else {
       if (n.targetRole === 'patient') return false;
@@ -622,7 +622,7 @@ export default function App() {
           <div>
             <h1 className="font-bold text-white text-base leading-tight">DentiClinic PWA</h1>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 capitalize">{currentUser.role} Portal</span>
+              <span className="text-xs text-slate-400 capitalize">{currentUser?.role} Portal</span>
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             </div>
           </div>
@@ -636,7 +636,7 @@ export default function App() {
               title="Notifications"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-              {notifications.some(n => !n.read && (currentUser.role === 'patient' ? (n.targetRole === 'all' || n.targetRole === 'patient') : n.targetRole !== 'patient')) && (
+              {notifications.some(n => !n.read && (currentUser?.role === 'patient' ? (n.targetRole === 'all' || n.targetRole === 'patient') : n.targetRole !== 'patient')) && (
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-teal-400"></span>
               )}
             </button>
@@ -691,8 +691,8 @@ export default function App() {
           </div>
 
           <div className="text-right hidden sm:block">
-            <div className="text-sm font-semibold text-white">{currentUser.name}</div>
-            <div className="text-xs text-slate-400">{currentUser.email || currentUser.phone}</div>
+            <div className="text-sm font-semibold text-white">{currentUser?.name}</div>
+            <div className="text-xs text-slate-400">{currentUser?.email || currentUser?.phone}</div>
           </div>
           <button
             onClick={() => setCurrentUser(null)}
@@ -704,7 +704,7 @@ export default function App() {
         </div>
       </header>
 
-      {currentUser.role === 'patient' && (
+      {currentUser?.role === 'patient' && (
         (() => {
           const myActiveApt = appointments.find(a => a.patientId === currentUser.id && a.status === 'In-Chair');
           const myQueuedApt = appointments.find(a => a.patientId === currentUser.id && a.status === 'Queued');
@@ -750,7 +750,7 @@ export default function App() {
             { id: 'patients', label: 'Patients List', roles: ['dentist', 'assistant'] },
             { id: 'chat', label: 'Clinical Chat', roles: ['dentist', 'assistant', 'patient'] },
           ]
-            .filter(tab => tab.roles.includes(currentUser.role))
+            .filter(tab => tab.roles.includes(currentUser?.role))
             .map(tab => (
               <button
                 key={tab.id}
@@ -775,7 +775,7 @@ export default function App() {
                   <p className="text-xs text-slate-400">Click any tooth to examine or update its medical condition</p>
                 </div>
 
-                {currentUser.role !== 'patient' && (
+                {currentUser?.role !== 'patient' && (
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <label className="text-xs text-slate-400 shrink-0">Patient:</label>
                     <select
@@ -868,7 +868,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {currentUser.role !== 'patient' && (
+                {currentUser?.role !== 'patient' && (
                   <div className="pt-4 border-t border-slate-800 flex justify-between items-center gap-3 flex-wrap">
                     <span className="text-xs font-semibold text-teal-400">Selected Tooth: #{selectedTooth} ({currentPatient?.conditions[selectedTooth] || 'Healthy'})</span>
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -892,14 +892,14 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'consultation' && currentUser.role !== 'patient' && (
+          {activeTab === 'consultation' && currentUser?.role !== 'patient' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
                   <h2 className="text-base sm:text-lg font-bold text-white">Consultation & Live Queue</h2>
                   <p className="text-xs text-slate-400">Manage waiting queue, call patients in, and record clinical notes & pricing</p>
                 </div>
-                {currentUser.role === 'assistant' && (
+                {currentUser?.role === 'assistant' && (
                   <button
                     onClick={() => setShowWalkInModal(true)}
                     className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5"
@@ -953,7 +953,7 @@ export default function App() {
                             <div className="text-xs text-slate-400 mt-0.5">{apt.service} • {apt.time}</div>
                           </div>
                           
-                          {currentUser.role === 'dentist' && apt.status !== 'In-Chair' && (
+                          {currentUser?.role === 'dentist' && apt.status !== 'In-Chair' && (
                             <button
                               onClick={() => handleCallPatientInQueue(apt)}
                               className="px-3.5 py-1.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs shadow-md shadow-teal-500/20 hover:bg-teal-400 transition"
@@ -983,7 +983,7 @@ export default function App() {
                     Showing treatment history for <span className="text-teal-400 font-semibold">{currentPatient?.name}</span> ({currentPatient?.id})
                   </p>
                 </div>
-                {currentUser.role !== 'patient' && (
+                {currentUser?.role !== 'patient' && (
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <select
                       value={selectedPatientId}
@@ -1050,7 +1050,7 @@ export default function App() {
                         <div className="p-2 bg-teal-500/10 text-teal-400 rounded-xl border border-teal-500/20 font-bold text-xs">
                           BRANCH ID: {clinic.id}
                         </div>
-                        {currentUser.role === 'dentist' && (
+                        {currentUser?.role === 'dentist' && (
                           <button
                             onClick={() => { setActiveClinic(clinic); setShowEditClinicModal(true); }}
                             className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-teal-400 rounded-xl text-xs font-semibold"
@@ -1073,7 +1073,7 @@ export default function App() {
                       <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
                         <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Online & Operational
                       </span>
-                      {currentUser.role === 'patient' && (
+                      {currentUser?.role === 'patient' && (
                         <button
                           onClick={() => {
                             setBookingData(prev => ({ ...prev, clinicName: clinic.name }));
@@ -1099,7 +1099,7 @@ export default function App() {
                   <h2 className="text-base sm:text-lg font-bold text-white">Appointments & Billing</h2>
                   <p className="text-xs text-slate-400">Manage clinic bookings and payment settlements</p>
                 </div>
-                {currentUser.role === 'patient' && (
+                {currentUser?.role === 'patient' && (
                   <button
                     onClick={() => setShowBookingModal(true)}
                     className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
@@ -1124,7 +1124,7 @@ export default function App() {
                     </thead>
                     <tbody className="divide-y divide-slate-800 text-slate-300">
                       {appointments
-                        .filter(apt => currentUser.role === 'patient' ? apt.patientId === currentUser.id : true)
+                        .filter(apt => currentUser?.role === 'patient' ? apt.patientId === currentUser.id : true)
                         .map(apt => (
                         <tr key={apt.id} className="hover:bg-slate-900/50">
                           <td className="p-4 font-semibold text-white">{apt.patientName}</td>
@@ -1142,7 +1142,7 @@ export default function App() {
                                 <span>Paid via {apt.paymentMethod || 'GCash'}</span>
                               </span>
                             ) : (
-                              currentUser.role !== 'patient' ? (
+                              currentUser?.role !== 'patient' ? (
                                 <button
                                   onClick={() => { setActivePaymentApt(apt); setShowPaymentModal(true); }}
                                   className="px-3.5 py-1.5 bg-teal-500/10 border border-teal-500/30 text-teal-400 hover:bg-teal-500 hover:text-slate-950 rounded-xl text-xs font-semibold transition"
@@ -1165,7 +1165,7 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'sales' && currentUser.role !== 'patient' && (
+          {activeTab === 'sales' && currentUser?.role !== 'patient' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -1282,7 +1282,7 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'patients' && currentUser.role !== 'patient' && (
+          {activeTab === 'patients' && currentUser?.role !== 'patient' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
@@ -1354,7 +1354,7 @@ export default function App() {
                     onChange={(e) => setChatRecipientId(e.target.value)}
                     className="bg-slate-900 text-white border border-slate-800 rounded-xl text-xs px-3 py-1.5 focus:outline-none [color-scheme:dark]"
                   >
-                    {currentUser.role === 'patient' ? (
+                    {currentUser?.role === 'patient' ? (
                       <option value="DOC-1" className="bg-slate-900 text-white">Dr. Estrada, DDM (Dentist)</option>
                     ) : (
                       <>
@@ -1364,7 +1364,7 @@ export default function App() {
                           ))}
                         </optgroup>
                         <optgroup label="Assistants" className="bg-slate-900 text-white">
-                          {assistants.filter(a => a.id !== currentUser.id).map(a => (
+                          {assistants.filter(a => a.id !== currentUser?.id).map(a => (
                             <option key={a.id} value={a.id} className="bg-slate-900 text-white">{a.name}</option>
                           ))}
                         </optgroup>
@@ -1377,7 +1377,7 @@ export default function App() {
               <div className="flex-1 p-4 overflow-y-auto space-y-3">
                 {activeChatMessages.length > 0 ? (
                   activeChatMessages.map(msg => {
-                    const isMe = msg.senderId === currentUser.id;
+                    const isMe = msg.senderId === currentUser?.id;
                     return (
                       <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                         <div className="text-[10px] text-slate-400 mb-1">{msg.senderName} • {msg.timestamp}</div>
@@ -1413,7 +1413,7 @@ export default function App() {
         </main>
       </div>
 
-      {showConsultationModal && currentUser.role !== 'patient' && (
+      {showConsultationModal && currentUser?.role !== 'patient' && (
         <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
@@ -1515,7 +1515,7 @@ export default function App() {
         </div>
       )}
 
-      {showAddHistoryModal && currentUser.role !== 'patient' && (
+      {showAddHistoryModal && currentUser?.role !== 'patient' && (
         <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
@@ -1566,7 +1566,7 @@ export default function App() {
         </div>
       )}
 
-      {showEditClinicModal && activeClinic && currentUser.role !== 'patient' && (
+      {showEditClinicModal && activeClinic && currentUser?.role !== 'patient' && (
         <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
@@ -1631,7 +1631,7 @@ export default function App() {
         </div>
       )}
 
-      {showNewPatientModal && currentUser.role !== 'patient' && (
+      {showNewPatientModal && currentUser?.role !== 'patient' && (
         <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8 text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
@@ -1739,7 +1739,7 @@ export default function App() {
         </div>
       )}
 
-      {showWalkInModal && currentUser.role !== 'patient' && (
+      {showWalkInModal && currentUser?.role !== 'patient' && (
         <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8 text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
@@ -1969,7 +1969,7 @@ export default function App() {
         </div>
       )}
 
-      {showPaymentModal && activePaymentApt && currentUser.role !== 'patient' && (
+      {showPaymentModal && activePaymentApt && currentUser?.role !== 'patient' && (
         <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm text-center space-y-4 text-slate-100">
             <h3 className="font-bold text-white text-lg">Select Payment Method</h3>
