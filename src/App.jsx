@@ -30,7 +30,7 @@ export default function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  // Password Reset / Change State
+  // Password Reset State
   const [showForcePasswordModal, setShowForcePasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -392,7 +392,7 @@ export default function App() {
     );
   }
 
-  // RESPONSIVE DASHBOARD APP
+  // MAIN DASHBOARD APP
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Top Header */}
@@ -433,9 +433,9 @@ export default function App() {
         </div>
       )}
 
-      {/* Main Layout Body: Adaptive Sidebar/Topbar for Mobile & Desktop */}
+      {/* Main Layout Body */}
       <div className="flex-1 flex flex-col md:flex-row">
-        <nav className="bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1.5 overflow-x-auto shrink-0 shadow-inner">
+        <nav className="bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1.5 overflow-x-auto shrink-0">
           {[
             { id: 'odontogram', label: 'Odontogram', icon: Activity, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'vitals', label: 'Vital Signs', icon: ShieldAlert, roles: ['dentist', 'assistant'] },
@@ -452,7 +452,7 @@ export default function App() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition shrink-0 whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-sm'
+                      ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20'
                       : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                   }`}
                 >
@@ -465,7 +465,7 @@ export default function App() {
 
         {/* Dynamic Content Panel */}
         <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
-          {/* TAB 1: ODONTOGRAM CHART */}
+          {/* TAB 1: ODONTOGRAM CHART (FIXED GRID SYSTEM) */}
           {activeTab === 'odontogram' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
@@ -503,12 +503,15 @@ export default function App() {
                 </div>
               )}
 
-              {/* Tooth Grid */}
-              <div className="bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-6 overflow-x-auto">
+              {/* Tooth Grid - Fixed with Inline Grid Style */}
+              <div className="bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-6">
                 {/* Upper Arch */}
-                <div className="min-w-[600px] sm:min-w-0">
+                <div className="overflow-x-auto pb-2">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">Upper Arch (Maxillary)</h3>
-                  <div className="grid grid-cols-16 gap-1.5 sm:gap-2">
+                  <div
+                    className="grid gap-1.5 sm:gap-2 min-w-[700px]"
+                    style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
+                  >
                     {Array.from({ length: 16 }, (_, i) => i + 1).map(num => {
                       const cond = currentPatient?.conditions[num];
                       return (
@@ -534,9 +537,12 @@ export default function App() {
                 </div>
 
                 {/* Lower Arch */}
-                <div className="min-w-[600px] sm:min-w-0 pt-2">
+                <div className="overflow-x-auto pb-2 border-t border-slate-800 pt-4">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">Lower Arch (Mandibular)</h3>
-                  <div className="grid grid-cols-16 gap-1.5 sm:gap-2">
+                  <div
+                    className="grid gap-1.5 sm:gap-2 min-w-[700px]"
+                    style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
+                  >
                     {Array.from({ length: 16 }, (_, i) => 32 - i).map(num => {
                       const cond = currentPatient?.conditions[num];
                       return (
