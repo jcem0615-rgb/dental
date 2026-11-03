@@ -22,7 +22,8 @@ import {
   Building2,
   Stethoscope,
   DollarSign,
-  Banknote
+  Banknote,
+  UserPlus
 } from 'lucide-react';
 
 export default function App() {
@@ -112,8 +113,8 @@ export default function App() {
     try {
       const saved = localStorage.getItem('denti_appointments');
       return saved ? JSON.parse(saved) : [
-        { id: 'APT-1', patientId: 'P-101', patientName: 'Maria Santos', service: 'Tooth Extraction', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '10:00 AM', status: 'Confirmed', amount: 1500, paid: true, paymentMethod: 'GCash' },
-        { id: 'APT-2', patientId: 'P-102', patientName: 'Juan Dela Cruz', service: 'Dental Cleaning', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '02:00 PM', status: 'Confirmed', amount: 1200, paid: true, paymentMethod: 'Cash' }
+        { id: 'APT-1', patientId: 'P-101', patientName: 'Maria Santos', service: 'Tooth Extraction', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '10:00 AM', status: 'Queued', amount: 1500, paid: true, paymentMethod: 'GCash' },
+        { id: 'APT-2', patientId: 'P-102', patientName: 'Juan Dela Cruz', service: 'Dental Cleaning', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '02:00 PM', status: 'Waiting', amount: 1200, paid: true, paymentMethod: 'Cash' }
       ];
     } catch {
       return [];
@@ -124,8 +125,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem('denti_messages');
       return saved ? JSON.parse(saved) : [
-        { id: 1, senderId: 'DOC-1', receiverId: 'P-101', senderName: 'Dr. Estrada', text: 'Hi Maria, please remember to fast 2 hours before your appointment.', timestamp: '10:30 AM' },
-        { id: 2, senderId: 'P-101', receiverId: 'DOC-1', senderName: 'Maria Santos', text: 'Noted po Doctor, thank you!', timestamp: '10:32 AM' }
+        { id: 1, senderId: 'DOC-1', receiverId: 'P-101', senderName: 'Dr. Estrada', text: 'Hi Maria, please remember to fast 2 hours before your appointment.', timestamp: '10:30 AM' }
       ];
     } catch {
       return [];
@@ -138,16 +138,24 @@ export default function App() {
   const [chatInputText, setChatInputText] = useState('');
 
   const [showNewPatientModal, setShowNewPatientModal] = useState(false);
+  const [showWalkInModal, setShowWalkInModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showEditClinicModal, setShowEditClinicModal] = useState(false);
   const [showAddHistoryModal, setShowAddHistoryModal] = useState(false);
   const [showConsultationModal, setShowConsultationModal] = useState(false);
+  
   const [activeClinic, setActiveClinic] = useState(null);
   const [activePaymentApt, setActivePaymentApt] = useState(null);
 
   const [newPatientData, setNewPatientData] = useState({
     name: '', phone: '', email: '', gender: 'Female', age: 30, password: 'password123',
+    systolic: 120, diastolic: 80, hr: 72, spo2: 98, temp: 36.5, weight: 60
+  });
+
+  const [walkInData, setWalkInData] = useState({
+    name: '', phone: '', email: '', gender: 'Female', age: 30,
+    service: 'Dental Consultation', amount: 500,
     systolic: 120, diastolic: 80, hr: 72, spo2: 98, temp: 36.5, weight: 60
   });
 
@@ -232,6 +240,18 @@ export default function App() {
     addNotification('Security', 'Password updated successfully.');
   };
 
+  const triggerPasswordReset = (targetId, type) => {
+    if (type === 'patient') {
+      setPatients(prev => prev.map(p => p.id === targetId ? { ...p, password: 'password123', mustChangePassword: true } : p));
+      setResetSuccessMessage(`Password for patient ${targetId} reset to 'password123'.`);
+      addNotification('Security Audit', `Admin triggered password reset for patient ${targetId}.`);
+    } else if (type === 'assistant') {
+      setAssistants(prev => prev.map(a => a.id === targetId ? { ...a, password: 'password123', mustChangePassword: true } : a));
+      setResetSuccessMessage(`Password for assistant ${targetId} reset to 'password123'.`);
+    }
+    setTimeout(() => setResetSuccessMessage(''), 4000);
+  };
+
   const quickSwitch = (role) => {
     if (role === 'dentist') {
       setCurrentUser({ id: 'DOC-1', name: 'Dr. Estrada, DDM', role: 'dentist', email: 'admin@denticlinic.ph' });
@@ -280,31 +300,63 @@ export default function App() {
     setPatients([newP, ...patients]);
     setSelectedPatientId(newId);
     setShowNewPatientModal(false);
-    addNotification('Patient Registration', `Successfully registered patient ${newPatientData.name} (${newId}).`);
+    addNotification('Patient Registration', `Successfully registered patient ${newPatientData.name} (${newId}) with baseline vitals.`);
   };
 
-  const handleAddHistoryRecord = (e) => {
+  const handleRegisterWalkIn = (e) => {
     e.preventDefault();
-    if (!currentPatient) return;
-    const entry = {
-      id: `H-${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
-      procedure: newHistoryEntry.procedure,
-      tooth: newHistoryEntry.tooth,
-      clinic: newHistoryEntry.clinic,
-      doctor: newHistoryEntry.doctor,
-      notes: newHistoryEntry.notes
+    const newId = `P-${Math.floor(100 + Math.random() * 900)}`;
+    const newP = {
+      id: newId,
+      name: walkInData.name,
+      phone: walkInData.phone,
+      email: walkInData.email || `${newId.toLowerCase()}@walkin.ph`,
+      gender: walkInData.gender,
+      age: parseInt(walkInData.age, 10),
+      password: 'password123',
+      mustChangePassword: false,
+      vitals: {
+        systolic: parseInt(walkInData.systolic, 10),
+        diastolic: parseInt(walkInData.diastolic, 10),
+        hr: parseInt(walkInData.hr, 10),
+        spo2: parseInt(walkInData.spo2, 10),
+        temp: parseFloat(walkInData.temp),
+        weight: parseFloat(walkInData.weight)
+      },
+      conditions: {},
+      history: []
     };
 
-    setPatients(patients.map(p => {
-      if (p.id === currentPatient.id) {
-        return { ...p, history: [entry, ...(p.history || [])] };
-      }
-      return p;
+    const newApt = {
+      id: `APT-${Date.now()}`,
+      patientId: newId,
+      patientName: walkInData.name,
+      service: walkInData.service,
+      clinicName: 'DentiClinic - Malasiqui Main',
+      date: new Date().toISOString().split('T')[0],
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'Queued',
+      amount: walkInData.amount,
+      paid: false,
+      paymentMethod: 'Cash'
+    };
+
+    setPatients([newP, ...patients]);
+    setAppointments([newApt, ...appointments]);
+    setShowWalkInModal(false);
+    addNotification('Walk-In Queued', `Created profile & queued walk-in patient ${walkInData.name}.`);
+  };
+
+  const handleCallPatientInQueue = (apt) => {
+    setAppointments(appointments.map(a => {
+      if (a.id === apt.id) return { ...a, status: 'In-Chair' };
+      if (a.status === 'In-Chair') return { ...a, status: 'Completed' };
+      return a;
     }));
-    setShowAddHistoryModal(false);
-    setNewHistoryEntry({ procedure: 'Composite Filling', tooth: '#1', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: '' });
-    addNotification('Clinical Charting', `Added procedure record for ${currentPatient.name}`);
+    setSelectedPatientId(apt.patientId);
+
+    // Send Live Notification to Patient
+    addNotification('Patient Called In', `Doctor called ${apt.patientName} into the chair.`);
   };
 
   const handleSaveConsultation = (e) => {
@@ -336,7 +388,7 @@ export default function App() {
         clinicName: 'DentiClinic - Malasiqui Main',
         date: consultationData.followUpDate,
         time: '10:00 AM',
-        status: 'Scheduled',
+        status: 'Queued',
         amount: 0,
         paid: true,
         paymentMethod: 'Cash'
@@ -380,12 +432,13 @@ export default function App() {
     (msg.senderId === chatRecipientId && msg.receiverId === currentUser?.id)
   );
 
-  // Daily Sales Calculations for Today's Date
   const todayStr = new Date().toISOString().split('T')[0];
   const todayPaidAppointments = appointments.filter(apt => apt.paid && apt.date === todayStr);
   const totalDailySales = todayPaidAppointments.reduce((sum, apt) => sum + (apt.amount || 0), 0);
   const cashDailySales = todayPaidAppointments.filter(apt => apt.paymentMethod === 'Cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
   const gcashDailySales = todayPaidAppointments.filter(apt => apt.paymentMethod === 'GCash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
+
+  const activeChairPatient = appointments.find(a => a.status === 'In-Chair');
 
   const ToothIcon = ({ condition }) => {
     let fillColor = "#38bdf8";
@@ -612,6 +665,34 @@ export default function App() {
         </div>
       </header>
 
+      {/* Patient Live Queue Notification Banner */}
+      {currentUser.role === 'patient' && (
+        (() => {
+          const myActiveApt = appointments.find(a => a.patientId === currentUser.id && a.status === 'In-Chair');
+          const myQueuedApt = appointments.find(a => a.patientId === currentUser.id && a.status === 'Queued');
+          if (myActiveApt) {
+            return (
+              <div className="bg-teal-500 text-slate-950 px-4 py-2.5 text-xs font-bold flex items-center justify-between shadow-lg">
+                <div className="flex items-center gap-2">
+                  <Stethoscope className="w-4 h-4 animate-pulse" />
+                  <span>Dr. Estrada is calling you into the chair! Please proceed to the dental room.</span>
+                </div>
+                <span className="bg-slate-950 text-teal-400 px-2 py-0.5 rounded-lg text-[10px]">IN-CHAIR</span>
+              </div>
+            );
+          }
+          if (myQueuedApt) {
+            return (
+              <div className="bg-slate-900 border-b border-teal-500/30 text-slate-200 px-4 py-2 text-xs flex items-center justify-between">
+                <div>Queue Status: <span className="text-teal-400 font-bold">Queued for {myQueuedApt.service}</span> ({myQueuedApt.clinicName})</div>
+                <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold">WAITING</span>
+              </div>
+            );
+          }
+          return null;
+        })()
+      )}
+
       {resetSuccessMessage && (
         <div className="bg-emerald-500/20 border-b border-emerald-500/30 px-4 py-2.5 text-xs text-emerald-300 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -623,11 +704,10 @@ export default function App() {
         <nav className="bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1.5 overflow-x-auto shrink-0">
           {[
             { id: 'odontogram', label: 'Odontogram', icon: Activity, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'consultation', label: 'Consultations & Follow-up', icon: Stethoscope, roles: ['dentist', 'assistant'] },
+            { id: 'consultation', label: 'Consultation & Queue', icon: Stethoscope, roles: ['dentist', 'assistant'] },
             { id: 'history', label: 'Medical History', icon: FileText, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'clinics', label: 'Clinics & Branches', icon: Building2, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'appointments', label: 'Appointments & Billing', icon: Calendar, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'vitals', label: 'Vital Signs', icon: ShieldAlert, roles: ['dentist', 'assistant'] },
             { id: 'patients', label: 'Patients List', icon: Users, roles: ['dentist', 'assistant'] },
             { id: 'chat', label: 'Clinical Chat', icon: MessageSquare, roles: ['dentist', 'assistant', 'patient'] },
           ]
@@ -778,56 +858,84 @@ export default function App() {
           )}
 
           {activeTab === 'consultation' && (
-            <div className="space-y-6 max-w-4xl mx-auto">
+            <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
-                  <h2 className="text-base sm:text-lg font-bold text-white">Consultation & Follow-Up Management</h2>
-                  <p className="text-xs text-slate-400">Record clinical encounters, diagnosis, prescriptions, and schedule follow-ups</p>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Consultation & Live Queue</h2>
+                  <p className="text-xs text-slate-400">Manage waiting queue, call patients in, and record clinical notes</p>
                 </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <select
-                    value={selectedPatientId}
-                    onChange={(e) => setSelectedPatientId(e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-2.5"
-                  >
-                    {patients.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
+                {currentUser.role === 'assistant' && (
                   <button
-                    onClick={() => setShowConsultationModal(true)}
-                    className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shrink-0"
+                    onClick={() => setShowWalkInModal(true)}
+                    className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5"
                   >
-                    <Plus className="w-4 h-4" /> New Consultation
+                    <UserPlus className="w-4 h-4" /> Register Walk-In
                   </button>
-                </div>
+                )}
               </div>
 
-              {currentPatient && (
-                <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-4">
-                  <div className="border-b border-slate-800 pb-3">
-                    <h3 className="font-bold text-white text-base">{currentPatient.name} Encounter Log</h3>
-                    <p className="text-xs text-slate-400">ID: {currentPatient.id} | Contact: {currentPatient.phone}</p>
-                  </div>
-
-                  <div className="space-y-3">
-                    {currentPatient.history && currentPatient.history.length > 0 ? (
-                      currentPatient.history.map(item => (
-                        <div key={item.id} className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/60 space-y-1">
-                          <div className="flex justify-between items-center text-xs text-teal-400 font-bold">
-                            <span>{item.procedure}</span>
-                            <span className="text-slate-400 font-normal">{item.date}</span>
-                          </div>
-                          <p className="text-sm text-slate-200">{item.notes}</p>
-                          <div className="text-[10px] text-slate-400 pt-1">Attending: {item.doctor} at {item.clinic}</div>
-                        </div>
-                      ))
+              {/* LIVE QUEUE & CHAIR STATUS */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:col-span-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-bold text-white text-xs uppercase tracking-wider text-teal-400 mb-3 flex items-center gap-1.5">
+                      <Stethoscope className="w-4 h-4" /> Current Chair Status
+                    </h3>
+                    {activeChairPatient ? (
+                      <div className="bg-teal-500/10 border border-teal-500/30 p-4 rounded-xl space-y-2">
+                        <div className="text-xs text-teal-400 font-bold">IN CONSULTATION</div>
+                        <div className="text-base font-bold text-white">{activeChairPatient.patientName}</div>
+                        <div className="text-xs text-slate-300">{activeChairPatient.service}</div>
+                        <button
+                          onClick={() => setShowConsultationModal(true)}
+                          className="w-full mt-2 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs"
+                        >
+                          Open Encounter Form
+                        </button>
+                      </div>
                     ) : (
-                      <p className="text-xs text-slate-500 text-center py-6">No consultation records on file.</p>
+                      <div className="bg-slate-800/50 p-6 rounded-xl text-center text-slate-400 text-xs">
+                        Dental chair is currently vacant. Call a patient from the queue.
+                      </div>
                     )}
                   </div>
                 </div>
-              )}
+
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:col-span-2 space-y-3">
+                  <h3 className="font-bold text-white text-xs uppercase tracking-wider text-slate-400">Today's Patient Queue</h3>
+                  <div className="space-y-2 max-h-72 overflow-y-auto">
+                    {appointments.filter(a => a.date === todayStr && a.status !== 'Completed').length > 0 ? (
+                      appointments.filter(a => a.date === todayStr && a.status !== 'Completed').map((apt, idx) => (
+                        <div key={apt.id} className="flex justify-between items-center bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/60">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs text-teal-400 font-bold">#{idx + 1}</span>
+                              <span className="font-bold text-white text-sm">{apt.patientName}</span>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                apt.status === 'In-Chair' ? 'bg-teal-500 text-slate-950' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              }`}>{apt.status}</span>
+                            </div>
+                            <div className="text-xs text-slate-400 mt-0.5">{apt.service} • {apt.time}</div>
+                          </div>
+                          
+                          {currentUser.role === 'dentist' && apt.status !== 'In-Chair' && (
+                            <button
+                              onClick={() => handleCallPatientInQueue(apt)}
+                              className="px-3.5 py-1.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs shadow-md shadow-teal-500/20 hover:bg-teal-400 transition"
+                            >
+                              Come In
+                            </button>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-10 text-slate-500 text-xs">
+                        No patients currently in queue for today.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -951,7 +1059,6 @@ export default function App() {
 
           {activeTab === 'appointments' && (
             <div className="space-y-6 max-w-5xl mx-auto">
-              {/* Daily Sales Card for Dentist / Assistant */}
               {currentUser.role !== 'patient' && (
                 <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-teal-950/40 p-5 rounded-2xl border border-teal-500/20 shadow-xl">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
@@ -1014,7 +1121,9 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800 text-slate-300">
-                      {appointments.map(apt => (
+                      {appointments
+                        .filter(apt => currentUser.role === 'patient' ? apt.patientId === currentUser.id : true)
+                        .map(apt => (
                         <tr key={apt.id} className="hover:bg-slate-800/50">
                           <td className="p-4 font-semibold text-white">{apt.patientName}</td>
                           <td className="p-4">{apt.service}</td>
@@ -1048,62 +1157,12 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'vitals' && (
-            <div className="space-y-6 max-w-4xl mx-auto">
-              <div className="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
-                <h2 className="text-base sm:text-lg font-bold text-white">Pre-Anesthesia Vital Signs Intake</h2>
-                <p className="text-xs text-slate-400">Review patient cardiovascular screening</p>
-              </div>
-
-              {currentPatient && (
-                <div className="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-2">
-                    <div>
-                      <h3 className="font-bold text-white text-base">{currentPatient.name}</h3>
-                      <p className="text-xs text-slate-400">ID: {currentPatient.id} | Age: {currentPatient.age} | Gender: {currentPatient.gender}</p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold self-start sm:self-auto ${
-                      isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic)
-                        ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                        : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    }`}>
-                      {isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic) ? 'Hypertensive' : 'Normal Risk'}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                      <div className="text-xs text-slate-400 mb-1">Blood Pressure</div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.systolic} / {currentPatient.vitals.diastolic} <span className="text-xs text-slate-400">mmHg</span></div>
-                    </div>
-                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                      <div className="text-xs text-slate-400 mb-1">Heart Rate</div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.hr} <span className="text-xs text-slate-400">bpm</span></div>
-                    </div>
-                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                      <div className="text-xs text-slate-400 mb-1">Oxygen SpO2</div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.spo2}%</div>
-                    </div>
-                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                      <div className="text-xs text-slate-400 mb-1">Temperature</div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.temp} °C</div>
-                    </div>
-                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                      <div className="text-xs text-slate-400 mb-1">Body Weight</div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.weight} kg</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           {activeTab === 'patients' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
-                  <h2 className="text-base sm:text-lg font-bold text-white">Patient Database</h2>
-                  <p className="text-xs text-slate-400">Manage records and reset passwords</p>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Patient Database & Vitals</h2>
+                  <p className="text-xs text-slate-400">Manage records, baseline vitals, and password resets</p>
                 </div>
                 <button
                   onClick={() => setShowNewPatientModal(true)}
@@ -1115,13 +1174,13 @@ export default function App() {
 
               <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm min-w-[650px]">
+                  <table className="w-full text-left text-sm min-w-[750px]">
                     <thead className="bg-slate-950 border-b border-slate-800 text-xs text-slate-400 uppercase">
                       <tr>
                         <th className="p-4">ID & Name</th>
                         <th className="p-4">Contact</th>
                         <th className="p-4">Age / Gender</th>
-                        <th className="p-4">Vitals BP</th>
+                        <th className="p-4">Baseline Vitals (BP / HR)</th>
                         <th className="p-4 text-right">Security</th>
                       </tr>
                     </thead>
@@ -1137,7 +1196,11 @@ export default function App() {
                             <div className="text-xs text-slate-400">{p.email}</div>
                           </td>
                           <td className="p-4">{p.age} y/o ({p.gender})</td>
-                          <td className="p-4 font-mono text-xs">{p.vitals.systolic}/{p.vitals.diastolic} mmHg</td>
+                          <td className="p-4 font-mono text-xs">
+                            <span className={isHypertensive(p.vitals.systolic, p.vitals.diastolic) ? 'text-rose-400 font-bold' : 'text-emerald-400'}>
+                              {p.vitals.systolic}/{p.vitals.diastolic} mmHg
+                            </span> • {p.vitals.hr} bpm
+                          </td>
                           <td className="p-4 text-right">
                             <button
                               onClick={() => triggerPasswordReset(p.id, 'patient')}
@@ -1465,7 +1528,7 @@ export default function App() {
               </div>
 
               <div className="pt-2 border-t border-slate-800">
-                <h4 className="text-xs font-bold uppercase text-teal-400 mb-3">Pre-Anesthesia Vitals Baseline</h4>
+                <h4 className="text-xs font-bold uppercase text-teal-400 mb-3">Pre-Anesthesia Vitals Baseline (Required)</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[10px] text-slate-400 mb-1">Systolic BP</label>
@@ -1520,6 +1583,122 @@ export default function App() {
         </div>
       )}
 
+      {showWalkInModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+              <h3 className="font-bold text-white text-base sm:text-lg">Walk-In Profile & Queue Registration</h3>
+              <button onClick={() => setShowWalkInModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleRegisterWalkIn} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={walkInData.name}
+                    onChange={(e) => setWalkInData({ ...walkInData, name: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    required
+                    value={walkInData.phone}
+                    onChange={(e) => setWalkInData({ ...walkInData, phone: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Age</label>
+                  <input
+                    type="number"
+                    required
+                    value={walkInData.age}
+                    onChange={(e) => setWalkInData({ ...walkInData, age: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Service</label>
+                  <select
+                    value={walkInData.service}
+                    onChange={(e) => {
+                      const price = e.target.value === 'Tooth Extraction' ? 1500 : e.target.value === 'Root Canal' ? 4500 : e.target.value === 'Dental Cleaning' ? 1200 : 500;
+                      setWalkInData({ ...walkInData, service: e.target.value, amount: price });
+                    }}
+                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  >
+                    <option value="Dental Consultation">Dental Consultation (₱500)</option>
+                    <option value="Dental Cleaning">Dental Cleaning (₱1,200)</option>
+                    <option value="Tooth Extraction">Tooth Extraction (₱1,500)</option>
+                    <option value="Root Canal">Root Canal Treatment (₱4,500)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-800">
+                <h4 className="text-xs font-bold uppercase text-teal-400 mb-3">Pre-Anesthesia Vitals Intake</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-1">Systolic BP</label>
+                    <input
+                      type="number"
+                      required
+                      value={walkInData.systolic}
+                      onChange={(e) => setWalkInData({ ...walkInData, systolic: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-1">Diastolic BP</label>
+                    <input
+                      type="number"
+                      required
+                      value={walkInData.diastolic}
+                      onChange={(e) => setWalkInData({ ...walkInData, diastolic: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-1">Heart Rate</label>
+                    <input
+                      type="number"
+                      required
+                      value={walkInData.hr}
+                      onChange={(e) => setWalkInData({ ...walkInData, hr: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowWalkInModal(false)}
+                  className="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2.5 bg-teal-500 text-slate-950 rounded-xl text-xs font-bold"
+                >
+                  Register & Queue Walk-In
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {showBookingModal && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
@@ -1535,12 +1714,12 @@ export default function App() {
                   clinicName: bookingData.clinicName,
                   date: bookingData.date || new Date().toISOString().split('T')[0],
                   time: bookingData.time,
-                  status: 'Pending',
+                  status: 'Queued',
                   amount: bookingData.amount,
                   paid: false,
                   paymentMethod: 'Cash'
                 };
-                setAppointments([...appointments, newApt]);
+                setAppointments([newApt, ...appointments]);
                 setShowBookingModal(false);
                 addNotification('Appointment Booked', `Successfully requested booking for ${bookingData.service}.`);
               }}
@@ -1610,7 +1789,7 @@ export default function App() {
                 onClick={() => {
                   setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed', paymentMethod: 'Cash' } : a));
                   setShowPaymentModal(false);
-                  addNotification('Payment Confirmed', `Cash payment of ₱${activePaymentApt.amount} processed.`);
+                  addNotification('Payment Confirmed', `Cash payment of ₱{activePaymentApt.amount} processed.`);
                 }}
                 className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
               >
@@ -1621,7 +1800,7 @@ export default function App() {
                 onClick={() => {
                   setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed', paymentMethod: 'GCash' } : a));
                   setShowPaymentModal(false);
-                  addNotification('Payment Confirmed', `GCash payment of ₱${activePaymentApt.amount} processed.`);
+                  addNotification('Payment Confirmed', `GCash payment of ₱{activePaymentApt.amount} processed.`);
                 }}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
               >
