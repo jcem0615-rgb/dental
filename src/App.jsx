@@ -1,33 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Activity,
-  Calendar,
-  Users,
-  FileText,
-  MessageSquare,
-  ShieldAlert,
-  Plus,
-  Lock,
-  User,
-  Key,
-  Eye,
-  EyeOff,
-  LogOut,
-  Send,
-  AlertTriangle,
-  QrCode,
-  CheckCircle2,
-  X,
-  Bell,
-  Building2,
-  Stethoscope,
-  DollarSign,
-  Banknote,
-  UserPlus,
-  TrendingUp,
-  BarChart3,
-  Filter
-} from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -53,111 +25,56 @@ export default function App() {
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [notificationFilter, setNotificationFilter] = useState('all');
 
-  const [patients, setPatients] = useState(() => {
-    try {
-      const saved = localStorage.getItem('denti_patients');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (e) {
-      console.error(e);
+  const [patients, setPatients] = useState([
+    {
+      id: 'P-101',
+      name: 'Maria Santos',
+      phone: '09171234567',
+      email: 'maria@example.com',
+      gender: 'Female',
+      age: 28,
+      password: 'password123',
+      mustChangePassword: false,
+      vitals: { systolic: 120, diastolic: 80, hr: 72, spo2: 98, temp: 36.6, weight: 55 },
+      conditions: { 4: 'Caries', 14: 'Filled' },
+      history: [
+        { id: 'H-1', date: '2026-08-14', procedure: 'Composite Filling', tooth: '#14', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: 'Restored occlusal caries with light-cured composite.' }
+      ]
+    },
+    {
+      id: 'P-102',
+      name: 'Juan Dela Cruz',
+      phone: '09189876543',
+      email: 'juan@example.com',
+      gender: 'Male',
+      age: 35,
+      password: 'password123',
+      mustChangePassword: false,
+      vitals: { systolic: 145, diastolic: 92, hr: 85, spo2: 97, temp: 36.8, weight: 78 },
+      conditions: { 19: 'Extracted' },
+      history: [
+        { id: 'H-2', date: '2026-09-01', procedure: 'Tooth Extraction', tooth: '#19', clinic: 'DentiClinic - Dagupan Branch', doctor: 'Dr. Estrada', notes: 'Extracted severely decayed molar under local anesthesia.' }
+      ]
     }
-    return [
-      {
-        id: 'P-101',
-        name: 'Maria Santos',
-        phone: '09171234567',
-        email: 'maria@example.com',
-        gender: 'Female',
-        age: 28,
-        password: 'password123',
-        mustChangePassword: false,
-        vitals: { systolic: 120, diastolic: 80, hr: 72, spo2: 98, temp: 36.6, weight: 55 },
-        conditions: { 4: 'Caries', 14: 'Filled' },
-        history: [
-          { id: 'H-1', date: '2026-08-14', procedure: 'Composite Filling', tooth: '#14', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: 'Restored occlusal caries with light-cured composite.' }
-        ]
-      },
-      {
-        id: 'P-102',
-        name: 'Juan Dela Cruz',
-        phone: '09189876543',
-        email: 'juan@example.com',
-        gender: 'Male',
-        age: 35,
-        password: 'password123',
-        mustChangePassword: false,
-        vitals: { systolic: 145, diastolic: 92, hr: 85, spo2: 97, temp: 36.8, weight: 78 },
-        conditions: { 19: 'Extracted' },
-        history: [
-          { id: 'H-2', date: '2026-09-01', procedure: 'Tooth Extraction', tooth: '#19', clinic: 'DentiClinic - Dagupan Branch', doctor: 'Dr. Estrada', notes: 'Extracted severely decayed molar under local anesthesia.' }
-        ]
-      }
-    ];
-  });
+  ]);
 
-  const [assistants, setAssistants] = useState(() => {
-    try {
-      const saved = localStorage.getItem('denti_assistants');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    return [
-      { id: 'A-01', name: 'Nurse Joy', phone: '09190001111', email: 'joy@denticlinic.ph', password: 'password123', mustChangePassword: false }
-    ];
-  });
+  const [assistants, setAssistants] = useState([
+    { id: 'A-01', name: 'Nurse Joy', phone: '09190001111', email: 'joy@denticlinic.ph', password: 'password123', mustChangePassword: false }
+  ]);
 
-  const [clinics, setClinics] = useState(() => {
-    try {
-      const saved = localStorage.getItem('denti_clinics');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    return [
-      { id: 'C-1', name: 'DentiClinic - Malasiqui Main', address: 'Canan Norte, Malasiqui, Pangasinan', schedule: 'Mon, Wed, Fri: 9:00 AM - 5:00 PM', tin: '000-123-456-000' },
-      { id: 'C-2', name: 'DentiClinic - Dagupan Branch', address: 'Tapuac District, Dagupan City', schedule: 'Tue, Thu, Sat: 9:00 AM - 4:00 PM', tin: '000-123-456-001' }
-    ];
-  });
+  const [clinics, setClinics] = useState([
+    { id: 'C-1', name: 'DentiClinic - Malasiqui Main', address: 'Canan Norte, Malasiqui, Pangasinan', schedule: 'Mon, Wed, Fri: 9:00 AM - 5:00 PM', tin: '000-123-456-000' },
+    { id: 'C-2', name: 'DentiClinic - Dagupan Branch', address: 'Tapuac District, Dagupan City', schedule: 'Tue, Thu, Sat: 9:00 AM - 4:00 PM', tin: '000-123-456-001' }
+  ]);
 
-  const [appointments, setAppointments] = useState(() => {
-    try {
-      const saved = localStorage.getItem('denti_appointments');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    return [
-      { id: 'APT-1', patientId: 'P-101', patientName: 'Maria Santos', service: 'Tooth Extraction', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '10:00 AM', status: 'Queued', amount: 1500, paid: true, paymentMethod: 'GCash' },
-      { id: 'APT-2', patientId: 'P-102', patientName: 'Juan Dela Cruz', service: 'Dental Cleaning', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '02:00 PM', status: 'Waiting', amount: 1200, paid: true, paymentMethod: 'Cash' }
-    ];
-  });
+  const [appointments, setAppointments] = useState([
+    { id: 'APT-1', patientId: 'P-101', patientName: 'Maria Santos', service: 'Tooth Extraction', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '10:00 AM', status: 'Queued', amount: 1500, paid: true, paymentMethod: 'GCash' },
+    { id: 'APT-2', patientId: 'P-102', patientName: 'Juan Dela Cruz', service: 'Dental Cleaning', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '02:00 PM', status: 'Waiting', amount: 1200, paid: true, paymentMethod: 'Cash' }
+  ]);
 
-  const [messages, setMessages] = useState(() => {
-    try {
-      const saved = localStorage.getItem('denti_messages');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    return [
-      { id: 1, senderId: 'DOC-1', receiverId: 'P-101', senderName: 'Dr. Estrada', text: 'Hi Maria, please remember to fast 2 hours before your appointment.', timestamp: '10:30 AM' }
-    ];
-  });
+  const [messages, setMessages] = useState([
+    { id: 1, senderId: 'DOC-1', receiverId: 'P-101', senderName: 'Dr. Estrada', text: 'Hi Maria, please remember to fast 2 hours before your appointment.', timestamp: '10:30 AM' }
+  ]);
 
   const [selectedPatientId, setSelectedPatientId] = useState('P-101');
   const [selectedTooth, setSelectedTooth] = useState(1);
@@ -197,22 +114,6 @@ export default function App() {
   const [consultationData, setConsultationData] = useState({
     service: 'Dental Consultation', customService: '', amount: 500, chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: ''
   });
-
-  useEffect(() => {
-    try { localStorage.setItem('denti_patients', JSON.stringify(patients)); } catch(e){}
-  }, [patients]);
-  useEffect(() => {
-    try { localStorage.setItem('denti_appointments', JSON.stringify(appointments)); } catch(e){}
-  }, [appointments]);
-  useEffect(() => {
-    try { localStorage.setItem('denti_messages', JSON.stringify(messages)); } catch(e){}
-  }, [messages]);
-  useEffect(() => {
-    try { localStorage.setItem('denti_assistants', JSON.stringify(assistants)); } catch(e){}
-  }, [assistants]);
-  useEffect(() => {
-    try { localStorage.setItem('denti_clinics', JSON.stringify(clinics)); } catch(e){}
-  }, [clinics]);
 
   const addNotification = (title, text, targetRole = 'all') => {
     const newN = { 
@@ -583,7 +484,7 @@ export default function App() {
         <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
           <div className="text-center mb-6">
             <div className="inline-flex p-3 bg-teal-500/10 text-teal-400 rounded-2xl mb-3 border border-teal-500/20">
-              <Activity className="w-8 h-8" />
+              <LucideIcons.Activity className="w-8 h-8" />
             </div>
             <h1 className="text-2xl font-bold text-white">DentiClinic PWA</h1>
             <p className="text-slate-400 text-sm mt-1">Dental Practice & Patient Portal</p>
@@ -591,7 +492,7 @@ export default function App() {
 
           {authError && (
             <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-sm flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <LucideIcons.AlertTriangle className="w-4 h-4 shrink-0" />
               <span>{authError}</span>
             </div>
           )}
@@ -600,7 +501,7 @@ export default function App() {
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Phone Number or Email</label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+                <LucideIcons.User className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
                 <input
                   type="text"
                   required
@@ -615,7 +516,7 @@ export default function App() {
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Password</label>
               <div className="relative">
-                <Key className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+                <LucideIcons.Key className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
@@ -629,7 +530,7 @@ export default function App() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-3.5 text-slate-500 hover:text-slate-300"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <LucideIcons.EyeOff className="w-4 h-4" /> : <LucideIcons.Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -666,7 +567,7 @@ export default function App() {
       <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl text-slate-100">
           <div className="flex items-center gap-3 text-amber-400 mb-4">
-            <Lock className="w-6 h-6" />
+            <LucideIcons.Lock className="w-6 h-6" />
             <h2 className="text-lg font-bold text-white">Password Change Required</h2>
           </div>
           <p className="text-slate-400 text-sm mb-4">
@@ -717,7 +618,7 @@ export default function App() {
       <header className="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-teal-500/10 text-teal-400 rounded-xl border border-teal-500/20">
-            <Activity className="w-5 h-5" />
+            <LucideIcons.Activity className="w-5 h-5" />
           </div>
           <div>
             <h1 className="font-bold text-white text-base leading-tight">DentiClinic PWA</h1>
@@ -735,7 +636,7 @@ export default function App() {
               className="p-2 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition relative"
               title="Notifications"
             >
-              <Bell className="w-4 h-4" />
+              <LucideIcons.Bell className="w-4 h-4" />
               {notifications.some(n => !n.read && (currentUser.role === 'patient' ? (n.targetRole === 'all' || n.targetRole === 'patient') : n.targetRole !== 'patient')) && (
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-teal-400"></span>
               )}
@@ -799,7 +700,7 @@ export default function App() {
             className="p-2 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition"
             title="Log Out"
           >
-            <LogOut className="w-4 h-4" />
+            <LucideIcons.LogOut className="w-4 h-4" />
           </button>
         </div>
       </header>
@@ -812,7 +713,7 @@ export default function App() {
             return (
               <div className="bg-teal-500 text-slate-950 px-4 py-2.5 text-xs font-bold flex items-center justify-between shadow-lg">
                 <div className="flex items-center gap-2">
-                  <Stethoscope className="w-4 h-4 animate-pulse" />
+                  <LucideIcons.Stethoscope className="w-4 h-4 animate-pulse" />
                   <span>Dr. Estrada is calling you into the chair! Please proceed to the dental room.</span>
                 </div>
                 <span className="bg-slate-950 text-teal-400 px-2 py-0.5 rounded-lg text-[10px]">IN-CHAIR</span>
@@ -833,7 +734,7 @@ export default function App() {
 
       {resetSuccessMessage && (
         <div className="bg-emerald-500/20 border-b border-emerald-500/30 px-4 py-2.5 text-xs text-emerald-300 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <LucideIcons.CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{resetSuccessMessage}</span>
         </div>
       )}
@@ -841,14 +742,14 @@ export default function App() {
       <div className="flex-1 flex flex-col md:flex-row bg-slate-950">
         <nav className="bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1.5 overflow-x-auto shrink-0">
           {[
-            { id: 'odontogram', label: 'Odontogram', icon: Activity, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'consultation', label: 'Consultation & Queue', icon: Stethoscope, roles: ['dentist', 'assistant'] },
-            { id: 'history', label: 'Medical History', icon: FileText, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'clinics', label: 'Clinics & Branches', icon: Building2, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'appointments', label: 'Appointments & Billing', icon: Calendar, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'sales', label: 'Daily History & Monitoring', icon: BarChart3, roles: ['dentist', 'assistant'] },
-            { id: 'patients', label: 'Patients List', icon: Users, roles: ['dentist', 'assistant'] },
-            { id: 'chat', label: 'Clinical Chat', icon: MessageSquare, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'odontogram', label: 'Odontogram', icon: LucideIcons.Activity, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'consultation', label: 'Consultation & Queue', icon: LucideIcons.Stethoscope, roles: ['dentist', 'assistant'] },
+            { id: 'history', label: 'Medical History', icon: LucideIcons.FileText, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'clinics', label: 'Clinics & Branches', icon: LucideIcons.Building2, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'appointments', label: 'Appointments & Billing', icon: LucideIcons.Calendar, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'sales', label: 'Daily History & Monitoring', icon: LucideIcons.BarChart3, roles: ['dentist', 'assistant'] },
+            { id: 'patients', label: 'Patients List', icon: LucideIcons.Users, roles: ['dentist', 'assistant'] },
+            { id: 'chat', label: 'Clinical Chat', icon: LucideIcons.MessageSquare, roles: ['dentist', 'assistant', 'patient'] },
           ]
             .filter(tab => tab.roles.includes(currentUser.role))
             .map(tab => {
@@ -897,7 +798,7 @@ export default function App() {
 
               {currentPatient && isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic) && (
                 <div className="bg-rose-500/10 border border-rose-500/30 p-4 rounded-2xl flex items-start sm:items-center gap-3 text-rose-400">
-                  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 sm:mt-0" />
+                  <LucideIcons.AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 sm:mt-0" />
                   <div>
                     <h4 className="font-semibold text-sm text-rose-300">Pre-Anesthesia Hypertension Warning</h4>
                     <p className="text-xs text-rose-400/90 mt-0.5">
@@ -1008,7 +909,7 @@ export default function App() {
                     onClick={() => setShowWalkInModal(true)}
                     className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5"
                   >
-                    <UserPlus className="w-4 h-4" /> Register Walk-In
+                    <LucideIcons.UserPlus className="w-4 h-4" /> Register Walk-In
                   </button>
                 )}
               </div>
@@ -1017,7 +918,7 @@ export default function App() {
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:col-span-1 flex flex-col justify-between">
                   <div>
                     <h3 className="font-bold text-white text-xs uppercase tracking-wider text-teal-400 mb-3 flex items-center gap-1.5">
-                      <Stethoscope className="w-4 h-4" /> Current Chair Status
+                      <LucideIcons.Stethoscope className="w-4 h-4" /> Current Chair Status
                     </h3>
                     {activeChairPatient ? (
                       <div className="bg-teal-500/10 border border-teal-500/30 p-4 rounded-xl space-y-2">
@@ -1104,7 +1005,7 @@ export default function App() {
                       onClick={() => setShowAddHistoryModal(true)}
                       className="px-3.5 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shrink-0"
                     >
-                      <Plus className="w-4 h-4" /> Add Record
+                      <LucideIcons.Plus className="w-4 h-4" /> Add Record
                     </button>
                   </div>
                 )}
@@ -1210,7 +1111,7 @@ export default function App() {
                     onClick={() => setShowBookingModal(true)}
                     className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
                   >
-                    <Plus className="w-4 h-4" /> Book Appointment
+                    <LucideIcons.Plus className="w-4 h-4" /> Book Appointment
                   </button>
                 )}
               </div>
@@ -1245,7 +1146,7 @@ export default function App() {
                                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
                                   : 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
                               }`}>
-                                <CheckCircle2 className="w-3.5 h-3.5" /> Paid via {apt.paymentMethod || 'GCash'}
+                                <LucideIcons.CheckCircle2 className="w-3.5 h-3.5" /> Paid via {apt.paymentMethod || 'GCash'}
                               </span>
                             ) : (
                               currentUser.role !== 'patient' ? (
@@ -1276,14 +1177,14 @@ export default function App() {
               <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <BarChart3 className="w-5 h-5 text-teal-400" />
+                    <LucideIcons.BarChart3 className="w-5 h-5 text-teal-400" />
                     <h2 className="text-base sm:text-lg font-bold text-white">Daily History & Monthly Sales Monitoring</h2>
                   </div>
                   <p className="text-xs text-slate-400">Select any calendar date to audit transactions and revenue analytics.</p>
                 </div>
 
                 <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl">
-                  <Calendar className="w-4 h-4 text-teal-400" />
+                  <LucideIcons.Calendar className="w-4 h-4 text-teal-400" />
                   <span className="text-xs text-slate-300 font-medium">Audit Date:</span>
                   <input
                     type="date"
@@ -1401,7 +1302,7 @@ export default function App() {
                   onClick={() => setShowNewPatientModal(true)}
                   className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
                 >
-                  <Plus className="w-4 h-4" /> Register Patient
+                  <LucideIcons.Plus className="w-4 h-4" /> Register Patient
                 </button>
               </div>
 
@@ -1513,7 +1414,7 @@ export default function App() {
                   className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
                 />
                 <button type="submit" className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1">
-                  <Send className="w-4 h-4" /> Send
+                  <LucideIcons.Send className="w-4 h-4" /> Send
                 </button>
               </form>
             </div>
@@ -1527,7 +1428,7 @@ export default function App() {
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base">Service Encounter & Billing Form</h3>
               <button onClick={() => setShowConsultationModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+                <LucideIcons.X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleSaveConsultation} className="space-y-4">
@@ -1631,7 +1532,7 @@ export default function App() {
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base">Add Treatment Record</h3>
               <button onClick={() => setShowAddHistoryModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+                <LucideIcons.X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleAddHistoryRecord} className="space-y-4">
@@ -1684,7 +1585,7 @@ export default function App() {
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base">Edit Branch Settings</h3>
               <button onClick={() => setShowEditClinicModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+                <LucideIcons.X className="w-5 h-5" />
               </button>
             </div>
             <form
@@ -1751,7 +1652,7 @@ export default function App() {
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base sm:text-lg">Register Patient & Initial Vitals</h3>
               <button onClick={() => setShowNewPatientModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+                <LucideIcons.X className="w-5 h-5" />
               </button>
             </div>
 
@@ -1861,7 +1762,7 @@ export default function App() {
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base sm:text-lg">Walk-In Profile & Queue Registration</h3>
               <button onClick={() => setShowWalkInModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+                <LucideIcons.X className="w-5 h-5" />
               </button>
             </div>
 
@@ -2058,7 +1959,7 @@ export default function App() {
                     placeholder="Enter custom procedure..."
                     value={bookingData.customService}
                     onChange={(e) => setBookingData({ ...bookingData, customService: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm"
+                    className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-sm"
                   />
                 </div>
               )}
@@ -2070,7 +1971,7 @@ export default function App() {
                   required
                   value={bookingData.date}
                   onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-                  className="w-full bg-slate-900 text-white border border-slate-800 rounded-xl px-3 py-2.5 text-sm [color-scheme:dark]"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-sm [color-scheme:dark]"
                 />
               </div>
 
@@ -2103,7 +2004,7 @@ export default function App() {
                 }}
                 className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
               >
-                <Banknote className="w-4 h-4" /> Paid by Cash
+                <LucideIcons.Banknote className="w-4 h-4" /> Paid by Cash
               </button>
 
               <button
@@ -2115,7 +2016,7 @@ export default function App() {
                 }}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
               >
-                <QrCode className="w-4 h-4" /> Paid by GCash
+                <LucideIcons.QrCode className="w-4 h-4" /> Paid by GCash
               </button>
             </div>
 
