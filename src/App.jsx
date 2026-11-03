@@ -56,87 +56,107 @@ export default function App() {
   const [patients, setPatients] = useState(() => {
     try {
       const saved = localStorage.getItem('denti_patients');
-      return saved ? JSON.parse(saved) : [
-        {
-          id: 'P-101',
-          name: 'Maria Santos',
-          phone: '09171234567',
-          email: 'maria@example.com',
-          gender: 'Female',
-          age: 28,
-          password: 'password123',
-          mustChangePassword: false,
-          vitals: { systolic: 120, diastolic: 80, hr: 72, spo2: 98, temp: 36.6, weight: 55 },
-          conditions: { 4: 'Caries', 14: 'Filled' },
-          history: [
-            { id: 'H-1', date: '2026-08-14', procedure: 'Composite Filling', tooth: '#14', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: 'Restored occlusal caries with light-cured composite.' }
-          ]
-        },
-        {
-          id: 'P-102',
-          name: 'Juan Dela Cruz',
-          phone: '09189876543',
-          email: 'juan@example.com',
-          gender: 'Male',
-          age: 35,
-          password: 'password123',
-          mustChangePassword: false,
-          vitals: { systolic: 145, diastolic: 92, hr: 85, spo2: 97, temp: 36.8, weight: 78 },
-          conditions: { 19: 'Extracted' },
-          history: [
-            { id: 'H-2', date: '2026-09-01', procedure: 'Tooth Extraction', tooth: '#19', clinic: 'DentiClinic - Dagupan Branch', doctor: 'Dr. Estrada', notes: 'Extracted severely decayed molar under local anesthesia.' }
-          ]
-        }
-      ];
-    } catch {
-      return [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error(e);
     }
+    return [
+      {
+        id: 'P-101',
+        name: 'Maria Santos',
+        phone: '09171234567',
+        email: 'maria@example.com',
+        gender: 'Female',
+        age: 28,
+        password: 'password123',
+        mustChangePassword: false,
+        vitals: { systolic: 120, diastolic: 80, hr: 72, spo2: 98, temp: 36.6, weight: 55 },
+        conditions: { 4: 'Caries', 14: 'Filled' },
+        history: [
+          { id: 'H-1', date: '2026-08-14', procedure: 'Composite Filling', tooth: '#14', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: 'Restored occlusal caries with light-cured composite.' }
+        ]
+      },
+      {
+        id: 'P-102',
+        name: 'Juan Dela Cruz',
+        phone: '09189876543',
+        email: 'juan@example.com',
+        gender: 'Male',
+        age: 35,
+        password: 'password123',
+        mustChangePassword: false,
+        vitals: { systolic: 145, diastolic: 92, hr: 85, spo2: 97, temp: 36.8, weight: 78 },
+        conditions: { 19: 'Extracted' },
+        history: [
+          { id: 'H-2', date: '2026-09-01', procedure: 'Tooth Extraction', tooth: '#19', clinic: 'DentiClinic - Dagupan Branch', doctor: 'Dr. Estrada', notes: 'Extracted severely decayed molar under local anesthesia.' }
+        ]
+      }
+    ];
   });
 
   const [assistants, setAssistants] = useState(() => {
     try {
       const saved = localStorage.getItem('denti_assistants');
-      return saved ? JSON.parse(saved) : [
-        { id: 'A-01', name: 'Nurse Joy', phone: '09190001111', email: 'joy@denticlinic.ph', password: 'password123', mustChangePassword: false }
-      ];
-    } catch {
-      return [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error(e);
     }
+    return [
+      { id: 'A-01', name: 'Nurse Joy', phone: '09190001111', email: 'joy@denticlinic.ph', password: 'password123', mustChangePassword: false }
+    ];
   });
 
   const [clinics, setClinics] = useState(() => {
     try {
       const saved = localStorage.getItem('denti_clinics');
-      return saved ? JSON.parse(saved) : [
-        { id: 'C-1', name: 'DentiClinic - Malasiqui Main', address: 'Canan Norte, Malasiqui, Pangasinan', schedule: 'Mon, Wed, Fri: 9:00 AM - 5:00 PM', tin: '000-123-456-000' },
-        { id: 'C-2', name: 'DentiClinic - Dagupan Branch', address: 'Tapuac District, Dagupan City', schedule: 'Tue, Thu, Sat: 9:00 AM - 4:00 PM', tin: '000-123-456-001' }
-      ];
-    } catch {
-      return [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error(e);
     }
+    return [
+      { id: 'C-1', name: 'DentiClinic - Malasiqui Main', address: 'Canan Norte, Malasiqui, Pangasinan', schedule: 'Mon, Wed, Fri: 9:00 AM - 5:00 PM', tin: '000-123-456-000' },
+      { id: 'C-2', name: 'DentiClinic - Dagupan Branch', address: 'Tapuac District, Dagupan City', schedule: 'Tue, Thu, Sat: 9:00 AM - 4:00 PM', tin: '000-123-456-001' }
+    ];
   });
 
   const [appointments, setAppointments] = useState(() => {
     try {
       const saved = localStorage.getItem('denti_appointments');
-      return saved ? JSON.parse(saved) : [
-        { id: 'APT-1', patientId: 'P-101', patientName: 'Maria Santos', service: 'Tooth Extraction', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '10:00 AM', status: 'Queued', amount: 1500, paid: true, paymentMethod: 'GCash' },
-        { id: 'APT-2', patientId: 'P-102', patientName: 'Juan Dela Cruz', service: 'Dental Cleaning', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '02:00 PM', status: 'Waiting', amount: 1200, paid: true, paymentMethod: 'Cash' }
-      ];
-    } catch {
-      return [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.error(e);
     }
+    return [
+      { id: 'APT-1', patientId: 'P-101', patientName: 'Maria Santos', service: 'Tooth Extraction', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '10:00 AM', status: 'Queued', amount: 1500, paid: true, paymentMethod: 'GCash' },
+      { id: 'APT-2', patientId: 'P-102', patientName: 'Juan Dela Cruz', service: 'Dental Cleaning', clinicName: 'DentiClinic - Malasiqui Main', date: new Date().toISOString().split('T')[0], time: '02:00 PM', status: 'Waiting', amount: 1200, paid: true, paymentMethod: 'Cash' }
+    ];
   });
 
   const [messages, setMessages] = useState(() => {
     try {
       const saved = localStorage.getItem('denti_messages');
-      return saved ? JSON.parse(saved) : [
-        { id: 1, senderId: 'DOC-1', receiverId: 'P-101', senderName: 'Dr. Estrada', text: 'Hi Maria, please remember to fast 2 hours before your appointment.', timestamp: '10:30 AM' }
-      ];
-    } catch {
-      return [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.error(e);
     }
+    return [
+      { id: 1, senderId: 'DOC-1', receiverId: 'P-101', senderName: 'Dr. Estrada', text: 'Hi Maria, please remember to fast 2 hours before your appointment.', timestamp: '10:30 AM' }
+    ];
   });
 
   const [selectedPatientId, setSelectedPatientId] = useState('P-101');
@@ -178,11 +198,21 @@ export default function App() {
     service: 'Dental Consultation', customService: '', amount: 500, chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: ''
   });
 
-  useEffect(() => { localStorage.setItem('denti_patients', JSON.stringify(patients)); }, [patients]);
-  useEffect(() => { localStorage.setItem('denti_appointments', JSON.stringify(appointments)); }, [appointments]);
-  useEffect(() => { localStorage.setItem('denti_messages', JSON.stringify(messages)); }, [messages]);
-  useEffect(() => { localStorage.setItem('denti_assistants', JSON.stringify(assistants)); }, [assistants]);
-  useEffect(() => { localStorage.setItem('denti_clinics', JSON.stringify(clinics)); }, [clinics]);
+  useEffect(() => {
+    try { localStorage.setItem('denti_patients', JSON.stringify(patients)); } catch(e){}
+  }, [patients]);
+  useEffect(() => {
+    try { localStorage.setItem('denti_appointments', JSON.stringify(appointments)); } catch(e){}
+  }, [appointments]);
+  useEffect(() => {
+    try { localStorage.setItem('denti_messages', JSON.stringify(messages)); } catch(e){}
+  }, [messages]);
+  useEffect(() => {
+    try { localStorage.setItem('denti_assistants', JSON.stringify(assistants)); } catch(e){}
+  }, [assistants]);
+  useEffect(() => {
+    try { localStorage.setItem('denti_clinics', JSON.stringify(clinics)); } catch(e){}
+  }, [clinics]);
 
   const addNotification = (title, text, targetRole = 'all') => {
     const newN = { 
@@ -2028,7 +2058,7 @@ export default function App() {
                     placeholder="Enter custom procedure..."
                     value={bookingData.customService}
                     onChange={(e) => setBookingData({ ...bookingData, customService: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-sm"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm"
                   />
                 </div>
               )}
@@ -2040,7 +2070,7 @@ export default function App() {
                   required
                   value={bookingData.date}
                   onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-sm [color-scheme:dark]"
+                  className="w-full bg-slate-900 text-white border border-slate-800 rounded-xl px-3 py-2.5 text-sm [color-scheme:dark]"
                 />
               </div>
 
