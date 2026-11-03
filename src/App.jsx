@@ -19,7 +19,10 @@ import {
   AlertTriangle,
   QrCode,
   CheckCircle2,
-  X
+  X,
+  Bell,
+  Building2,
+  Stethoscope
 } from 'lucide-react';
 
 export default function App() {
@@ -40,6 +43,12 @@ export default function App() {
   // Active View
   const [activeTab, setActiveTab] = useState('odontogram');
 
+  // Notifications State
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: 'System Notice', text: 'Welcome to DentiClinic PWA enterprise platform.', time: 'Just now', read: false }
+  ]);
+  const [showNotificationCenter, setShowNotificationCenter] = useState(false);
+
   // Database State (LocalStorage persisted)
   const [patients, setPatients] = useState(() => {
     const saved = localStorage.getItem('denti_patients');
@@ -56,8 +65,7 @@ export default function App() {
         vitals: { systolic: 120, diastolic: 80, hr: 72, spo2: 98, temp: 36.6, weight: 55 },
         conditions: { 4: 'Caries', 14: 'Filled' },
         history: [
-          { id: 'H-1', date: '2026-08-14', procedure: 'Composite Filling', tooth: '#14', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: 'Restored occlusal caries with light-cured composite.' },
-          { id: 'H-2', date: '2026-03-10', procedure: 'Prophylaxis (Cleaning)', tooth: 'All', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: 'Routine scaling and polishing. Mild gingivitis noted.' }
+          { id: 'H-1', date: '2026-08-14', procedure: 'Composite Filling', tooth: '#14', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: 'Restored occlusal caries with light-cured composite.' }
         ]
       },
       {
@@ -72,7 +80,7 @@ export default function App() {
         vitals: { systolic: 145, diastolic: 92, hr: 85, spo2: 97, temp: 36.8, weight: 78 },
         conditions: { 19: 'Extracted' },
         history: [
-          { id: 'H-3', date: '2026-09-01', procedure: 'Tooth Extraction', tooth: '#19', clinic: 'DentiClinic - Dagupan Branch', doctor: 'Dr. Estrada', notes: 'Extracted severely decayed molar under local anesthesia.' }
+          { id: 'H-2', date: '2026-09-01', procedure: 'Tooth Extraction', tooth: '#19', clinic: 'DentiClinic - Dagupan Branch', doctor: 'Dr. Estrada', notes: 'Extracted severely decayed molar under local anesthesia.' }
         ]
       }
     ];
@@ -88,8 +96,8 @@ export default function App() {
   const [clinics, setClinics] = useState(() => {
     const saved = localStorage.getItem('denti_clinics');
     return saved ? JSON.parse(saved) : [
-      { id: 'C-1', name: 'DentiClinic - Malasiqui Main', address: 'Canan Norte, Malasiqui, Pangasinan', schedule: 'Mon, Wed, Fri: 9:00 AM - 5:00 PM' },
-      { id: 'C-2', name: 'DentiClinic - Dagupan Branch', address: 'Tapuac District, Dagupan City', schedule: 'Tue, Thu, Sat: 9:00 AM - 4:00 PM' }
+      { id: 'C-1', name: 'DentiClinic - Malasiqui Main', address: 'Canan Norte, Malasiqui, Pangasinan', schedule: 'Mon, Wed, Fri: 9:00 AM - 5:00 PM', tin: '000-123-456-000' },
+      { id: 'C-2', name: 'DentiClinic - Dagupan Branch', address: 'Tapuac District, Dagupan City', schedule: 'Tue, Thu, Sat: 9:00 AM - 4:00 PM', tin: '000-123-456-001' }
     ];
   });
 
@@ -120,6 +128,7 @@ export default function App() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showEditClinicModal, setShowEditClinicModal] = useState(false);
   const [showAddHistoryModal, setShowAddHistoryModal] = useState(false);
+  const [showConsultationModal, setShowConsultationModal] = useState(false);
   const [activeClinic, setActiveClinic] = useState(null);
   const [activePaymentApt, setActivePaymentApt] = useState(null);
 
@@ -137,12 +146,21 @@ export default function App() {
     procedure: 'Composite Filling', tooth: '#1', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: ''
   });
 
+  const [consultationData, setConsultationData] = useState({
+    chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: ''
+  });
+
   // Sync to LocalStorage
   useEffect(() => { localStorage.setItem('denti_patients', JSON.stringify(patients)); }, [patients]);
   useEffect(() => { localStorage.setItem('denti_appointments', JSON.stringify(appointments)); }, [appointments]);
   useEffect(() => { localStorage.setItem('denti_messages', JSON.stringify(messages)); }, [messages]);
   useEffect(() => { localStorage.setItem('denti_assistants', JSON.stringify(assistants)); }, [assistants]);
   useEffect(() => { localStorage.setItem('denti_clinics', JSON.stringify(clinics)); }, [clinics]);
+
+  const addNotification = (title, text) => {
+    const newN = { id: Date.now(), title, text, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), read: false };
+    setNotifications(prev => [newN, ...prev]);
+  };
 
   // Login Handler
   const handleLogin = (e) => {
@@ -151,12 +169,14 @@ export default function App() {
 
     if ((loginIdentifier === 'doctor' || loginIdentifier === 'admin@denticlinic.ph' || loginIdentifier === '09170000000') && loginPassword === 'admin123') {
       setCurrentUser({ id: 'DOC-1', name: 'Dr. Estrada, DDM', role: 'dentist', phone: '09170000000', email: 'admin@denticlinic.ph', mustChangePassword: false });
+      addNotification('Sign In', 'Logged in as Chief Dentist.');
       return;
     }
 
     const foundAssistant = assistants.find(a => (a.phone === loginIdentifier || a.email.toLowerCase() === loginIdentifier.toLowerCase()) && a.password === loginPassword);
     if (foundAssistant) {
       setCurrentUser({ ...foundAssistant, role: 'assistant' });
+      addNotification('Sign In', `Logged in as Assistant ${foundAssistant.name}.`);
       if (foundAssistant.mustChangePassword) setShowForcePasswordModal(true);
       return;
     }
@@ -165,6 +185,7 @@ export default function App() {
     if (foundPatient) {
       setCurrentUser({ ...foundPatient, role: 'patient' });
       setSelectedPatientId(foundPatient.id);
+      addNotification('Sign In', `Welcome back, ${foundPatient.name}.`);
       if (foundPatient.mustChangePassword) setShowForcePasswordModal(true);
       return;
     }
@@ -194,12 +215,14 @@ export default function App() {
     setNewPassword('');
     setConfirmPassword('');
     setPasswordError('');
+    addNotification('Security', 'Password updated successfully.');
   };
 
   const triggerPasswordReset = (targetId, type) => {
     if (type === 'patient') {
       setPatients(prev => prev.map(p => p.id === targetId ? { ...p, password: 'password123', mustChangePassword: true } : p));
       setResetSuccessMessage(`Password for patient ${targetId} reset to 'password123'.`);
+      addNotification('Security Audit', `Admin triggered password reset for patient ${targetId}.`);
     } else if (type === 'assistant') {
       setAssistants(prev => prev.map(a => a.id === targetId ? { ...a, password: 'password123', mustChangePassword: true } : a));
       setResetSuccessMessage(`Password for assistant ${targetId} reset to 'password123'.`);
@@ -216,9 +239,13 @@ export default function App() {
       setCurrentUser({ id: 'P-101', name: 'Maria Santos', role: 'patient', email: 'maria@example.com' });
       setSelectedPatientId('P-101');
     }
+    addNotification('Quick Switch', `Switched session role to ${role}.`);
   };
 
-  const currentPatient = patients.find(p => p.id === selectedPatientId) || patients[0];
+  const currentPatient = currentUser?.role === 'patient' 
+    ? patients.find(p => p.id === currentUser.id) || patients[0] 
+    : patients.find(p => p.id === selectedPatientId) || patients[0];
+
   const isHypertensive = (sys, dia) => sys >= 140 || dia >= 90;
 
   const handleCreatePatient = (e) => {
@@ -248,6 +275,7 @@ export default function App() {
     setPatients([newP, ...patients]);
     setSelectedPatientId(newId);
     setShowNewPatientModal(false);
+    addNotification('Patient Registration', `Successfully registered patient ${newPatientData.name} (${newId}).`);
   };
 
   const handleAddHistoryRecord = (e) => {
@@ -271,6 +299,48 @@ export default function App() {
     }));
     setShowAddHistoryModal(false);
     setNewHistoryEntry({ procedure: 'Composite Filling', tooth: '#1', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: '' });
+    addNotification('Clinical Charting', `Added procedure record for ${currentPatient.name}`);
+  };
+
+  const handleSaveConsultation = (e) => {
+    e.preventDefault();
+    if (!currentPatient) return;
+    const entry = {
+      id: `C-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      procedure: `Consultation: ${consultationData.chiefComplaint}`,
+      tooth: 'General',
+      clinic: 'DentiClinic - Main',
+      doctor: currentUser.name,
+      notes: `Diagnosis: ${consultationData.diagnosis} | Rx: ${consultationData.prescription} | Follow-up: ${consultationData.followUpDate || 'None'}`
+    };
+
+    setPatients(patients.map(p => {
+      if (p.id === currentPatient.id) {
+        return { ...p, history: [entry, ...(p.history || [])] };
+      }
+      return p;
+    }));
+
+    if (consultationData.followUpDate) {
+      const followUpApt = {
+        id: `APT-${Date.now()}`,
+        patientId: currentPatient.id,
+        patientName: currentPatient.name,
+        service: 'Follow-up Consultation',
+        clinicName: 'DentiClinic - Malasiqui Main',
+        date: consultationData.followUpDate,
+        time: '10:00 AM',
+        status: 'Scheduled',
+        amount: 0,
+        paid: true
+      };
+      setAppointments(prev => [followUpApt, ...prev]);
+    }
+
+    setShowConsultationModal(false);
+    setConsultationData({ chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: '' });
+    addNotification('Consultation Saved', `Recorded consultation & follow-up for ${currentPatient.name}.`);
   };
 
   const updateToothCondition = (toothNum, cond) => {
@@ -296,6 +366,7 @@ export default function App() {
     };
     setMessages([...messages, newMsg]);
     setChatInputText('');
+    addNotification('New Message', `Message sent to participant.`);
   };
 
   const ToothIcon = ({ condition }) => {
@@ -475,6 +546,45 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Notification Bell */}
+          <div className="relative">
+            <button
+              onClick={() => setShowNotificationCenter(!showNotificationCenter)}
+              className="p-2 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition relative"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              {notifications.some(n => !n.read) && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-teal-400"></span>
+              )}
+            </button>
+
+            {showNotificationCenter && (
+              <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 z-50">
+                <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
+                  <h4 className="font-bold text-xs uppercase text-slate-300">System Notifications</h4>
+                  <button
+                    onClick={() => setNotifications(notifications.map(n => ({ ...n, read: true })))}
+                    className="text-[10px] text-teal-400 hover:underline"
+                  >
+                    Mark read
+                  </button>
+                </div>
+                <div className="space-y-2.5 max-h-64 overflow-y-auto">
+                  {notifications.map(n => (
+                    <div key={n.id} className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50 text-xs">
+                      <div className="flex justify-between font-semibold text-white mb-0.5">
+                        <span>{n.title}</span>
+                        <span className="text-[10px] text-slate-400">{n.time}</span>
+                      </div>
+                      <p className="text-slate-300">{n.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="text-right hidden sm:block">
             <div className="text-sm font-semibold text-white">{currentUser.name}</div>
             <div className="text-xs text-slate-400">{currentUser.email || currentUser.phone}</div>
@@ -502,8 +612,9 @@ export default function App() {
         <nav className="bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1.5 overflow-x-auto shrink-0">
           {[
             { id: 'odontogram', label: 'Odontogram', icon: Activity, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'consultation', label: 'Consultations & Follow-up', icon: Stethoscope, roles: ['dentist', 'assistant'] },
             { id: 'history', label: 'Medical History', icon: FileText, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'clinics', label: 'Clinics & Schedule', icon: Search, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'clinics', label: 'Clinics & Branches', icon: Building2, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'appointments', label: 'Appointments', icon: Calendar, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'vitals', label: 'Vital Signs', icon: ShieldAlert, roles: ['dentist', 'assistant'] },
             { id: 'patients', label: 'Patients List', icon: Users, roles: ['dentist', 'assistant'] },
@@ -665,7 +776,62 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 2: MEDICAL RECORD & CLINICAL HISTORY */}
+          {/* TAB 2: CONSULTATION & FOLLOW-UP MODULE */}
+          {activeTab === 'consultation' && (
+            <div className="space-y-6 max-w-4xl mx-auto">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Consultation & Follow-Up Management</h2>
+                  <p className="text-xs text-slate-400">Record clinical encounters, diagnosis, prescriptions, and schedule follow-ups</p>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <select
+                    value={selectedPatientId}
+                    onChange={(e) => setSelectedPatientId(e.target.value)}
+                    className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-2.5"
+                  >
+                    {patients.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => setShowConsultationModal(true)}
+                    className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shrink-0"
+                  >
+                    <Plus className="w-4 h-4" /> New Consultation
+                  </button>
+                </div>
+              </div>
+
+              {currentPatient && (
+                <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-4">
+                  <div className="border-b border-slate-800 pb-3">
+                    <h3 className="font-bold text-white text-base">{currentPatient.name} Encounter Log</h3>
+                    <p className="text-xs text-slate-400">ID: {currentPatient.id} | Contact: {currentPatient.phone}</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {currentPatient.history && currentPatient.history.length > 0 ? (
+                      currentPatient.history.map(item => (
+                        <div key={item.id} className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/60 space-y-1">
+                          <div className="flex justify-between items-center text-xs text-teal-400 font-bold">
+                            <span>{item.procedure}</span>
+                            <span className="text-slate-400 font-normal">{item.date}</span>
+                          </div>
+                          <p className="text-sm text-slate-200">{item.notes}</p>
+                          <div className="text-[10px] text-slate-400 pt-1">Attending: {item.doctor} at {item.clinic}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-slate-500 text-center py-6">No consultation records on file.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: MEDICAL HISTORY */}
           {activeTab === 'history' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
@@ -725,13 +891,13 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 3: CLINICS & SCHEDULE */}
+          {/* TAB 4: CLINICS & BRANCHES */}
           {activeTab === 'clinics' && (
             <div className="space-y-6 max-w-4xl mx-auto">
               <div className="flex justify-between items-center bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
-                  <h2 className="text-base sm:text-lg font-bold text-white">Clinic Branches & Doctor Schedules</h2>
-                  <p className="text-xs text-slate-400">View operating branches and doctor availability hours</p>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Multi-Branch Clinic Administration</h2>
+                  <p className="text-xs text-slate-400">View operating branches, BIR TIN, and doctor availability hours</p>
                 </div>
               </div>
 
@@ -741,19 +907,20 @@ export default function App() {
                     <div>
                       <div className="flex items-center justify-between mb-3">
                         <div className="p-2 bg-teal-500/10 text-teal-400 rounded-xl border border-teal-500/20 font-bold text-xs">
-                          BRANCH
+                          BRANCH ID: {clinic.id}
                         </div>
                         {currentUser.role === 'dentist' && (
                           <button
                             onClick={() => { setActiveClinic(clinic); setShowEditClinicModal(true); }}
                             className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-400 rounded-xl text-xs font-semibold"
                           >
-                            Edit Schedule
+                            Edit Settings
                           </button>
                         )}
                       </div>
                       <h3 className="font-bold text-white text-base mb-1">{clinic.name}</h3>
-                      <p className="text-xs text-slate-400 mb-4">{clinic.address}</p>
+                      <p className="text-xs text-slate-400 mb-2">{clinic.address}</p>
+                      <p className="text-[11px] font-mono text-teal-300 mb-4">BIR TIN: {clinic.tin || '000-000-000-000'}</p>
 
                       <div className="bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/50">
                         <div className="text-[10px] uppercase font-semibold text-slate-400">Doctor Operating Schedule</div>
@@ -763,7 +930,7 @@ export default function App() {
 
                     <div className="mt-6 pt-4 border-t border-slate-800 flex justify-between items-center">
                       <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Accepting Bookings
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Online & Operational
                       </span>
                       {currentUser.role === 'patient' && (
                         <button
@@ -784,7 +951,7 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 4: APPOINTMENTS & GCASH */}
+          {/* TAB 5: APPOINTMENTS & GCASH */}
           {activeTab === 'appointments' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
@@ -846,7 +1013,7 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 5: VITALS INTAKE */}
+          {/* TAB 6: VITALS INTAKE */}
           {activeTab === 'vitals' && (
             <div className="space-y-6 max-w-4xl mx-auto">
               <div className="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
@@ -897,7 +1064,7 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 6: PATIENTS LIST & RESETS */}
+          {/* TAB 7: PATIENTS LIST & RESETS */}
           {activeTab === 'patients' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
@@ -955,7 +1122,7 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 7: CLINICAL CHAT */}
+          {/* TAB 8: CLINICAL CHAT */}
           {activeTab === 'chat' && (
             <div className="max-w-4xl mx-auto h-[550px] sm:h-[600px] bg-slate-900 rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
               <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -1009,6 +1176,71 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* NEW CONSULTATION MODAL */}
+      {showConsultationModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+              <h3 className="font-bold text-white text-base">New Consultation & Follow-Up</h3>
+              <button onClick={() => setShowConsultationModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveConsultation} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Chief Complaint</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Toothache on lower right molar"
+                  value={consultationData.chiefComplaint}
+                  onChange={(e) => setConsultationData({ ...consultationData, chiefComplaint: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Clinical Diagnosis</label>
+                <textarea
+                  rows="2"
+                  required
+                  placeholder="Diagnosis notes..."
+                  value={consultationData.diagnosis}
+                  onChange={(e) => setConsultationData({ ...consultationData, diagnosis: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                ></textarea>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Prescription (Rx)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Mefenamic Acid 500mg every 8 hours"
+                  value={consultationData.prescription}
+                  onChange={(e) => setConsultationData({ ...consultationData, prescription: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Schedule Follow-Up Date (Optional)</label>
+                <input
+                  type="date"
+                  value={consultationData.followUpDate}
+                  onChange={(e) => setConsultationData({ ...consultationData, followUpDate: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowConsultationModal(false)} className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
+                  Save Encounter
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ADD CLINICAL HISTORY MODAL */}
       {showAddHistoryModal && (
@@ -1069,7 +1301,7 @@ export default function App() {
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-white text-base">Edit Branch Schedule</h3>
+              <h3 className="font-bold text-white text-base">Edit Branch Settings</h3>
               <button onClick={() => setShowEditClinicModal(false)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
@@ -1079,6 +1311,7 @@ export default function App() {
                 e.preventDefault();
                 setClinics(clinics.map(c => c.id === activeClinic.id ? activeClinic : c));
                 setShowEditClinicModal(false);
+                addNotification('Branch Updated', `Settings for ${activeClinic.name} saved.`);
               }}
               className="space-y-4"
             >
@@ -1097,6 +1330,15 @@ export default function App() {
                   type="text"
                   value={activeClinic.address}
                   onChange={(e) => setActiveClinic({ ...activeClinic, address: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">BIR Tax ID Number (TIN)</label>
+                <input
+                  type="text"
+                  value={activeClinic.tin || ''}
+                  onChange={(e) => setActiveClinic({ ...activeClinic, tin: e.target.value })}
                   className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
                 />
               </div>
@@ -1255,6 +1497,7 @@ export default function App() {
                 };
                 setAppointments([...appointments, newApt]);
                 setShowBookingModal(false);
+                addNotification('Appointment Booked', `Successfully requested booking for ${bookingData.service}.`);
               }}
               className="space-y-4"
             >
@@ -1327,6 +1570,7 @@ export default function App() {
               onClick={() => {
                 setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed' } : a));
                 setShowPaymentModal(false);
+                addNotification('Payment Confirmed', `GCash payment of ₱${activePaymentApt.amount} processed successfully.`);
               }}
               className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20"
             >
