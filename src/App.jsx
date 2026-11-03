@@ -160,12 +160,12 @@ export default function App() {
 
   const [walkInData, setWalkInData] = useState({
     name: '', phone: '', email: '', gender: 'Female', age: 30,
-    service: 'Dental Consultation', amount: 500,
+    service: 'Dental Consultation', customService: '', amount: 500,
     systolic: 120, diastolic: 80, hr: 72, spo2: 98, temp: 36.5, weight: 60
   });
 
   const [bookingData, setBookingData] = useState({
-    service: 'Dental Cleaning', clinicName: 'DentiClinic - Malasiqui Main', date: '', time: '09:00 AM', amount: 1200
+    service: 'Dental Cleaning', customService: '', clinicName: 'DentiClinic - Malasiqui Main', date: '', time: '09:00 AM'
   });
 
   const [newHistoryEntry, setNewHistoryEntry] = useState({
@@ -173,7 +173,7 @@ export default function App() {
   });
 
   const [consultationData, setConsultationData] = useState({
-    chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: ''
+    service: 'Dental Consultation', customService: '', amount: 500, chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: ''
   });
 
   useEffect(() => { localStorage.setItem('denti_patients', JSON.stringify(patients)); }, [patients]);
@@ -310,6 +310,7 @@ export default function App() {
 
   const handleRegisterWalkIn = (e) => {
     e.preventDefault();
+    const finalServiceName = walkInData.service === 'Custom Service' ? walkInData.customService : walkInData.service;
     const newId = `P-${Math.floor(100 + Math.random() * 900)}`;
     const newP = {
       id: newId,
@@ -336,12 +337,12 @@ export default function App() {
       id: `APT-${Date.now()}`,
       patientId: newId,
       patientName: walkInData.name,
-      service: walkInData.service,
+      service: finalServiceName,
       clinicName: 'DentiClinic - Malasiqui Main',
       date: new Date().toISOString().split('T')[0],
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       status: 'Queued',
-      amount: walkInData.amount,
+      amount: parseFloat(walkInData.amount) || 0,
       paid: false,
       paymentMethod: 'Cash'
     };
@@ -365,10 +366,12 @@ export default function App() {
   const handleSaveConsultation = (e) => {
     e.preventDefault();
     if (!currentPatient) return;
+    const finalServiceName = consultationData.service === 'Custom Service' ? consultationData.customService : consultationData.service;
+    
     const entry = {
       id: `C-${Date.now()}`,
       date: new Date().toISOString().split('T')[0],
-      procedure: `Consultation: ${consultationData.chiefComplaint}`,
+      procedure: `${finalServiceName}: ${consultationData.chiefComplaint}`,
       tooth: 'General',
       clinic: 'DentiClinic - Main',
       doctor: currentUser.name,
@@ -382,9 +385,30 @@ export default function App() {
       return p;
     }));
 
+    // Update or create the billing / appointment record with the entered amount so it appears in the patient portal
+    const activeApt = appointments.find(a => a.patientId === currentPatient.id && a.status === 'In-Chair');
+    if (activeApt) {
+      setAppointments(appointments.map(a => a.id === activeApt.id ? { ...a, service: finalServiceName, amount: parseFloat(consultationData.amount) || 0, status: 'Completed' } : a));
+    } else {
+      const newApt = {
+        id: `APT-${Date.now()}`,
+        patientId: currentPatient.id,
+        patientName: currentPatient.name,
+        service: finalServiceName,
+        clinicName: 'DentiClinic - Malasiqui Main',
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        status: 'Completed',
+        amount: parseFloat(consultationData.amount) || 0,
+        paid: false,
+        paymentMethod: 'Cash'
+      };
+      setAppointments(prev => [newApt, ...prev]);
+    }
+
     if (consultationData.followUpDate) {
       const followUpApt = {
-        id: `APT-${Date.now()}`,
+        id: `APT-${Date.now() + 1}`,
         patientId: currentPatient.id,
         patientName: currentPatient.name,
         service: 'Follow-up Consultation',
@@ -400,8 +424,8 @@ export default function App() {
     }
 
     setShowConsultationModal(false);
-    setConsultationData({ chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: '' });
-    addNotification('Consultation Saved', `Recorded consultation & follow-up for ${currentPatient.name}.`);
+    setConsultationData({ service: 'Dental Consultation', customService: '', amount: 500, chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: '' });
+    addNotification('Encounter Saved', `Recorded clinical service and updated billing for ${currentPatient.name}.`);
   };
 
   const handleAddHistoryRecord = (e) => {
@@ -464,13 +488,11 @@ export default function App() {
 
   const allPaidAppointments = appointments.filter(apt => apt.paid);
   
-  // Sales for the Selected Date (normalized payment method check)
   const selectedDatePaidAppointments = allPaidAppointments.filter(apt => apt.date === selectedSalesDate);
   const totalSelectedDateSales = selectedDatePaidAppointments.reduce((sum, apt) => sum + (apt.amount || 0), 0);
   const cashSelectedDateSales = selectedDatePaidAppointments.filter(apt => (apt.paymentMethod || 'cash').toLowerCase() === 'cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
   const gcashSelectedDateSales = selectedDatePaidAppointments.filter(apt => (apt.paymentMethod || '').toLowerCase() === 'gcash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
 
-  // Monthly Sales based on the month of the selected date
   const monthlyPaidAppointments = allPaidAppointments.filter(apt => apt.date && apt.date.startsWith(currentMonthStr));
   const totalMonthlySales = monthlyPaidAppointments.reduce((sum, apt) => sum + (apt.amount || 0), 0);
   const cashMonthlySales = monthlyPaidAppointments.filter(apt => (apt.paymentMethod || 'cash').toLowerCase() === 'cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
@@ -900,7 +922,7 @@ export default function App() {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
                   <h2 className="text-base sm:text-lg font-bold text-white">Consultation & Live Queue</h2>
-                  <p className="text-xs text-slate-400">Manage waiting queue, call patients in, and record clinical notes</p>
+                  <p className="text-xs text-slate-400">Manage waiting queue, call patients in, and record clinical notes & pricing</p>
                 </div>
                 {currentUser.role === 'assistant' && (
                   <button
@@ -922,12 +944,15 @@ export default function App() {
                       <div className="bg-teal-500/10 border border-teal-500/30 p-4 rounded-xl space-y-2">
                         <div className="text-xs text-teal-400 font-bold">IN CONSULTATION</div>
                         <div className="text-base font-bold text-white">{activeChairPatient.patientName}</div>
-                        <div className="text-xs text-slate-300">{activeChairPatient.service}</div>
+                        <div className="text-xs text-slate-350">Service: {activeChairPatient.service}</div>
                         <button
-                          onClick={() => setShowConsultationModal(true)}
-                          className="w-full mt-2 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs"
+                          onClick={() => {
+                            setSelectedPatientId(activeChairPatient.patientId);
+                            setShowConsultationModal(true);
+                          }}
+                          className="w-full mt-2 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs shadow-md shadow-teal-500/20"
                         >
-                          Open Encounter Form
+                          Open Encounter & Set Price
                         </button>
                       </div>
                     ) : (
@@ -1144,12 +1169,18 @@ export default function App() {
                                 <CheckCircle2 className="w-3.5 h-3.5" /> Paid via {apt.paymentMethod || 'GCash'}
                               </span>
                             ) : (
-                              <button
-                                onClick={() => { setActivePaymentApt(apt); setShowPaymentModal(true); }}
-                                className="px-3.5 py-1.5 bg-teal-500/10 border border-teal-500/30 text-teal-400 hover:bg-teal-500 hover:text-slate-950 rounded-xl text-xs font-semibold transition"
-                              >
-                                Collect Payment
-                              </button>
+                              currentUser.role !== 'patient' ? (
+                                <button
+                                  onClick={() => { setActivePaymentApt(apt); setShowPaymentModal(true); }}
+                                  className="px-3.5 py-1.5 bg-teal-500/10 border border-teal-500/30 text-teal-400 hover:bg-teal-500 hover:text-slate-950 rounded-xl text-xs font-semibold transition"
+                                >
+                                  Collect Payment
+                                </button>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl text-xs font-bold">
+                                  Pending Payment
+                                </span>
+                              )
                             )}
                           </td>
                         </tr>
@@ -1419,12 +1450,52 @@ export default function App() {
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-white text-base">New Consultation & Follow-Up</h3>
+              <h3 className="font-bold text-white text-base">Service Encounter & Billing Form</h3>
               <button onClick={() => setShowConsultationModal(false)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleSaveConsultation} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Service Performed</label>
+                <select
+                  value={consultationData.service}
+                  onChange={(e) => setConsultationData({ ...consultationData, service: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                >
+                  <option value="Dental Consultation">Dental Consultation</option>
+                  <option value="Dental Cleaning">Dental Cleaning</option>
+                  <option value="Tooth Extraction">Tooth Extraction</option>
+                  <option value="Root Canal">Root Canal Treatment</option>
+                  <option value="Custom Service">Custom Service...</option>
+                </select>
+              </div>
+
+              {consultationData.service === 'Custom Service' && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Custom Service Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter custom procedure name..."
+                    value={consultationData.customService}
+                    onChange={(e) => setConsultationData({ ...consultationData, customService: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Service Price (₱)</label>
+                <input
+                  type="number"
+                  required
+                  value={consultationData.amount}
+                  onChange={(e) => setConsultationData({ ...consultationData, amount: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm font-bold text-teal-400"
+                />
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Chief Complaint</label>
                 <input
@@ -1437,7 +1508,7 @@ export default function App() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Clinical Diagnosis</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Clinical Diagnosis & Notes</label>
                 <textarea
                   rows="2"
                   required
@@ -1471,7 +1542,7 @@ export default function App() {
                   Cancel
                 </button>
                 <button type="submit" className="px-4 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
-                  Save Encounter
+                  Complete Service & Publish Bill
                 </button>
               </div>
             </form>
@@ -1755,18 +1826,41 @@ export default function App() {
                   <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Service</label>
                   <select
                     value={walkInData.service}
-                    onChange={(e) => {
-                      const price = e.target.value === 'Tooth Extraction' ? 1500 : e.target.value === 'Root Canal' ? 4500 : e.target.value === 'Dental Cleaning' ? 1200 : 500;
-                      setWalkInData({ ...walkInData, service: e.target.value, amount: price });
-                    }}
+                    onChange={(e) => setWalkInData({ ...walkInData, service: e.target.value })}
                     className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
                   >
-                    <option value="Dental Consultation">Dental Consultation (₱500)</option>
-                    <option value="Dental Cleaning">Dental Cleaning (₱1,200)</option>
-                    <option value="Tooth Extraction">Tooth Extraction (₱1,500)</option>
-                    <option value="Root Canal">Root Canal Treatment (₱4,500)</option>
+                    <option value="Dental Consultation">Dental Consultation</option>
+                    <option value="Dental Cleaning">Dental Cleaning</option>
+                    <option value="Tooth Extraction">Tooth Extraction</option>
+                    <option value="Root Canal">Root Canal Treatment</option>
+                    <option value="Custom Service">Custom Service...</option>
                   </select>
                 </div>
+              </div>
+
+              {walkInData.service === 'Custom Service' && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Custom Service Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter custom procedure..."
+                    value={walkInData.customService}
+                    onChange={(e) => setWalkInData({ ...walkInData, customService: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Initial Price / Amount (₱)</label>
+                <input
+                  type="number"
+                  required
+                  value={walkInData.amount}
+                  onChange={(e) => setWalkInData({ ...walkInData, amount: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm font-bold text-teal-400"
+                />
               </div>
 
               <div className="pt-2 border-t border-slate-800">
@@ -1832,22 +1926,23 @@ export default function App() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
+                const finalServiceName = bookingData.service === 'Custom Service' ? bookingData.customService : bookingData.service;
                 const newApt = {
                   id: `APT-${Date.now()}`,
                   patientId: currentUser.id,
                   patientName: currentUser.name,
-                  service: bookingData.service,
+                  service: finalServiceName,
                   clinicName: bookingData.clinicName,
                   date: bookingData.date || new Date().toISOString().split('T')[0],
                   time: bookingData.time,
                   status: 'Queued',
-                  amount: bookingData.amount,
+                  amount: 0, // Set by doctor/assistant during encounter
                   paid: false,
                   paymentMethod: 'Cash'
                 };
                 setAppointments([newApt, ...appointments]);
                 setShowBookingModal(false);
-                addNotification('Appointment Booked', `Successfully requested booking for ${bookingData.service}.`);
+                addNotification('Appointment Booked', `Successfully requested booking for ${finalServiceName}.`);
               }}
               className="space-y-4"
             >
@@ -1868,17 +1963,29 @@ export default function App() {
                 <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Service</label>
                 <select
                   value={bookingData.service}
-                  onChange={(e) => {
-                    const price = e.target.value === 'Tooth Extraction' ? 1500 : e.target.value === 'Root Canal' ? 4500 : 1200;
-                    setBookingData({ ...bookingData, service: e.target.value, amount: price });
-                  }}
+                  onChange={(e) => setBookingData({ ...bookingData, service: e.target.value })}
                   className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
                 >
-                  <option value="Dental Cleaning">Dental Cleaning (₱1,200)</option>
-                  <option value="Tooth Extraction">Tooth Extraction (₱1,500)</option>
-                  <option value="Root Canal">Root Canal Treatment (₱4,500)</option>
+                  <option value="Dental Cleaning">Dental Cleaning</option>
+                  <option value="Tooth Extraction">Tooth Extraction</option>
+                  <option value="Root Canal">Root Canal Treatment</option>
+                  <option value="Custom Service">Custom Service...</option>
                 </select>
               </div>
+
+              {bookingData.service === 'Custom Service' && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Custom Service Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter custom procedure..."
+                    value={bookingData.customService}
+                    onChange={(e) => setBookingData({ ...bookingData, customService: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Date</label>
