@@ -15,6 +15,7 @@ import {
   LogOut,
   Send,
   AlertTriangle,
+  QrCode,
   CheckCircle2,
   X,
   Bell,
@@ -59,6 +60,21 @@ export default function App() {
           conditions: { 4: 'Caries', 14: 'Filled' },
           history: [
             { id: 'H-1', date: '2026-08-14', procedure: 'Composite Filling', tooth: '#14', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: 'Restored occlusal caries with light-cured composite.' }
+          ]
+        },
+        {
+          id: 'P-102',
+          name: 'Juan Dela Cruz',
+          phone: '09189876543',
+          email: 'juan@example.com',
+          gender: 'Male',
+          age: 35,
+          password: 'password123',
+          mustChangePassword: false,
+          vitals: { systolic: 145, diastolic: 92, hr: 85, spo2: 97, temp: 36.8, weight: 78 },
+          conditions: { 19: 'Extracted' },
+          history: [
+            { id: 'H-2', date: '2026-09-01', procedure: 'Tooth Extraction', tooth: '#19', clinic: 'DentiClinic - Dagupan Branch', doctor: 'Dr. Estrada', notes: 'Extracted severely decayed molar under local anesthesia.' }
           ]
         }
       ];
@@ -105,7 +121,8 @@ export default function App() {
     try {
       const saved = localStorage.getItem('denti_messages');
       return saved ? JSON.parse(saved) : [
-        { id: 1, senderId: 'DOC-1', receiverId: 'P-101', senderName: 'Dr. Estrada', text: 'Hi Maria, please remember to fast 2 hours before your appointment.', timestamp: '10:30 AM' }
+        { id: 1, senderId: 'DOC-1', receiverId: 'P-101', senderName: 'Dr. Estrada', text: 'Hi Maria, please remember to fast 2 hours before your appointment.', timestamp: '10:30 AM' },
+        { id: 2, senderId: 'P-101', receiverId: 'DOC-1', senderName: 'Maria Santos', text: 'Noted po Doctor, thank you!', timestamp: '10:32 AM' }
       ];
     } catch {
       return [];
@@ -117,7 +134,28 @@ export default function App() {
   const [chatRecipientId, setChatRecipientId] = useState('P-101');
   const [chatInputText, setChatInputText] = useState('');
 
+  const [showNewPatientModal, setShowNewPatientModal] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showEditClinicModal, setShowEditClinicModal] = useState(false);
+  const [showAddHistoryModal, setShowAddHistoryModal] = useState(false);
   const [showConsultationModal, setShowConsultationModal] = useState(false);
+  const [activeClinic, setActiveClinic] = useState(null);
+  const [activePaymentApt, setActivePaymentApt] = useState(null);
+
+  const [newPatientData, setNewPatientData] = useState({
+    name: '', phone: '', email: '', gender: 'Female', age: 30, password: 'password123',
+    systolic: 120, diastolic: 80, hr: 72, spo2: 98, temp: 36.5, weight: 60
+  });
+
+  const [bookingData, setBookingData] = useState({
+    service: 'Dental Cleaning', clinicName: 'DentiClinic - Malasiqui Main', date: '', time: '09:00 AM', amount: 1200
+  });
+
+  const [newHistoryEntry, setNewHistoryEntry] = useState({
+    procedure: 'Composite Filling', tooth: '#1', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: ''
+  });
+
   const [consultationData, setConsultationData] = useState({
     chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: ''
   });
@@ -191,6 +229,18 @@ export default function App() {
     addNotification('Security', 'Password updated successfully.');
   };
 
+  const triggerPasswordReset = (targetId, type) => {
+    if (type === 'patient') {
+      setPatients(prev => prev.map(p => p.id === targetId ? { ...p, password: 'password123', mustChangePassword: true } : p));
+      setResetSuccessMessage(`Password for patient ${targetId} reset to 'password123'.`);
+      addNotification('Security Audit', `Admin triggered password reset for patient ${targetId}.`);
+    } else if (type === 'assistant') {
+      setAssistants(prev => prev.map(a => a.id === targetId ? { ...a, password: 'password123', mustChangePassword: true } : a));
+      setResetSuccessMessage(`Password for assistant ${targetId} reset to 'password123'.`);
+    }
+    setTimeout(() => setResetSuccessMessage(''), 4000);
+  };
+
   const quickSwitch = (role) => {
     if (role === 'dentist') {
       setCurrentUser({ id: 'DOC-1', name: 'Dr. Estrada, DDM', role: 'dentist', email: 'admin@denticlinic.ph' });
@@ -212,6 +262,60 @@ export default function App() {
 
   const isHypertensive = (sys, dia) => sys >= 140 || dia >= 90;
 
+  const handleCreatePatient = (e) => {
+    e.preventDefault();
+    const newId = `P-${Math.floor(100 + Math.random() * 900)}`;
+    const newP = {
+      id: newId,
+      name: newPatientData.name,
+      phone: newPatientData.phone,
+      email: newPatientData.email,
+      gender: newPatientData.gender,
+      age: parseInt(newPatientData.age, 10),
+      password: newPatientData.password || 'password123',
+      mustChangePassword: false,
+      vitals: {
+        systolic: parseInt(newPatientData.systolic, 10),
+        diastolic: parseInt(newPatientData.diastolic, 10),
+        hr: parseInt(newPatientData.hr, 10),
+        spo2: parseInt(newPatientData.spo2, 10),
+        temp: parseFloat(newPatientData.temp),
+        weight: parseFloat(newPatientData.weight)
+      },
+      conditions: {},
+      history: []
+    };
+
+    setPatients([newP, ...patients]);
+    setSelectedPatientId(newId);
+    setShowNewPatientModal(false);
+    addNotification('Patient Registration', `Successfully registered patient ${newPatientData.name} (${newId}).`);
+  };
+
+  const handleAddHistoryRecord = (e) => {
+    e.preventDefault();
+    if (!currentPatient) return;
+    const entry = {
+      id: `H-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      procedure: newHistoryEntry.procedure,
+      tooth: newHistoryEntry.tooth,
+      clinic: newHistoryEntry.clinic,
+      doctor: newHistoryEntry.doctor,
+      notes: newHistoryEntry.notes
+    };
+
+    setPatients(patients.map(p => {
+      if (p.id === currentPatient.id) {
+        return { ...p, history: [entry, ...(p.history || [])] };
+      }
+      return p;
+    }));
+    setShowAddHistoryModal(false);
+    setNewHistoryEntry({ procedure: 'Composite Filling', tooth: '#1', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: '' });
+    addNotification('Clinical Charting', `Added procedure record for ${currentPatient.name}`);
+  };
+
   const handleSaveConsultation = (e) => {
     e.preventDefault();
     if (!currentPatient) return;
@@ -232,9 +336,25 @@ export default function App() {
       return p;
     }));
 
+    if (consultationData.followUpDate) {
+      const followUpApt = {
+        id: `APT-${Date.now()}`,
+        patientId: currentPatient.id,
+        patientName: currentPatient.name,
+        service: 'Follow-up Consultation',
+        clinicName: 'DentiClinic - Malasiqui Main',
+        date: consultationData.followUpDate,
+        time: '10:00 AM',
+        status: 'Scheduled',
+        amount: 0,
+        paid: true
+      };
+      setAppointments(prev => [followUpApt, ...prev]);
+    }
+
     setShowConsultationModal(false);
     setConsultationData({ chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: '' });
-    addNotification('Consultation Saved', `Recorded consultation for ${currentPatient.name}.`);
+    addNotification('Consultation Saved', `Recorded consultation & follow-up for ${currentPatient.name}.`);
   };
 
   const updateToothCondition = (toothNum, cond) => {
@@ -263,6 +383,7 @@ export default function App() {
     addNotification('New Message', 'Message sent.');
   };
 
+  // Messenger logic: Filter messages strictly between current user and selected chat recipient
   const activeChatMessages = messages.filter(msg => 
     (msg.senderId === currentUser?.id && msg.receiverId === chatRecipientId) ||
     (msg.senderId === chatRecipientId && msg.receiverId === currentUser?.id)
@@ -573,6 +694,12 @@ export default function App() {
                 <div className="overflow-x-auto pb-2">
                   <div className="flex justify-between items-center mb-3">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Upper Arch (Maxillary)</h3>
+                    <div className="flex items-center gap-3 text-[10px] text-slate-400">
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-400"></span>Healthy</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500"></span>Caries</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400"></span>Filled</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-500"></span>Extracted</span>
+                    </div>
                   </div>
                   <div className="grid gap-1.5 sm:gap-2 min-w-[750px]" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
                     {Array.from({ length: 16 }, (_, i) => i + 1).map(num => {
@@ -584,6 +711,10 @@ export default function App() {
                           className={`p-1.5 rounded-xl border flex flex-col items-center justify-between text-xs transition h-20 ${
                             selectedTooth === num
                               ? 'border-teal-500 bg-teal-500/15 shadow-md shadow-teal-500/10'
+                              : cond === 'Caries'
+                              ? 'border-rose-500/50 bg-rose-500/10 text-rose-400'
+                              : cond === 'Extracted'
+                              ? 'border-slate-700 bg-slate-950 text-slate-600 opacity-60'
                               : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-600'
                           }`}
                         >
@@ -608,6 +739,10 @@ export default function App() {
                           className={`p-1.5 rounded-xl border flex flex-col items-center justify-between text-xs transition h-20 ${
                             selectedTooth === num
                               ? 'border-teal-500 bg-teal-500/15 shadow-md shadow-teal-500/10'
+                              : cond === 'Caries'
+                              ? 'border-rose-500/50 bg-rose-500/10 text-rose-400'
+                              : cond === 'Extracted'
+                              ? 'border-slate-700 bg-slate-950 text-slate-600 opacity-60'
                               : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-600'
                           }`}
                         >
@@ -622,13 +757,17 @@ export default function App() {
 
                 {currentUser.role !== 'patient' && (
                   <div className="pt-4 border-t border-slate-800 flex justify-between items-center gap-3 flex-wrap">
-                    <span className="text-xs font-semibold text-teal-400">Selected Tooth: #{selectedTooth}</span>
+                    <span className="text-xs font-semibold text-teal-400">Selected Tooth: #{selectedTooth} ({currentPatient?.conditions[selectedTooth] || 'Healthy'})</span>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {['Healthy', 'Caries', 'Filled', 'Extracted', 'Crown', 'Root Canal'].map(cond => (
                         <button
                           key={cond}
                           onClick={() => updateToothCondition(selectedTooth, cond === 'Healthy' ? undefined : cond)}
-                          className="px-2.5 py-1.5 rounded-xl text-xs font-medium border bg-slate-800 border-slate-700 hover:border-teal-500 text-slate-300"
+                          className={`px-2.5 py-1.5 rounded-xl text-xs font-medium border transition ${
+                            (currentPatient?.conditions[selectedTooth] === cond || (!currentPatient?.conditions[selectedTooth] && cond === 'Healthy'))
+                              ? 'bg-teal-500 text-slate-950 border-teal-400 font-bold'
+                              : 'bg-slate-800 border-slate-700 hover:border-teal-500 text-slate-300'
+                          }`}
                         >
                           {cond}
                         </button>
@@ -642,113 +781,404 @@ export default function App() {
 
           {activeTab === 'consultation' && (
             <div className="space-y-6 max-w-4xl mx-auto">
-              <div className="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                <h2 className="text-base font-bold text-white">Consultations & Follow-Up</h2>
-                <button onClick={() => setShowConsultationModal(true)} className="px-4 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
-                  New Consultation
-                </button>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Consultation & Follow-Up Management</h2>
+                  <p className="text-xs text-slate-400">Record clinical encounters, diagnosis, prescriptions, and schedule follow-ups</p>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <select
+                    value={selectedPatientId}
+                    onChange={(e) => setSelectedPatientId(e.target.value)}
+                    className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-2.5"
+                  >
+                    {patients.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => setShowConsultationModal(true)}
+                    className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shrink-0"
+                  >
+                    <Plus className="w-4 h-4" /> New Consultation
+                  </button>
+                </div>
               </div>
+
+              {currentPatient && (
+                <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-4">
+                  <div className="border-b border-slate-800 pb-3">
+                    <h3 className="font-bold text-white text-base">{currentPatient.name} Encounter Log</h3>
+                    <p className="text-xs text-slate-400">ID: {currentPatient.id} | Contact: {currentPatient.phone}</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {currentPatient.history && currentPatient.history.length > 0 ? (
+                      currentPatient.history.map(item => (
+                        <div key={item.id} className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/60 space-y-1">
+                          <div className="flex justify-between items-center text-xs text-teal-400 font-bold">
+                            <span>{item.procedure}</span>
+                            <span className="text-slate-400 font-normal">{item.date}</span>
+                          </div>
+                          <p className="text-sm text-slate-200">{item.notes}</p>
+                          <div className="text-[10px] text-slate-400 pt-1">Attending: {item.doctor} at {item.clinic}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-slate-500 text-center py-6">No consultation records on file.</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'history' && (
             <div className="space-y-6 max-w-5xl mx-auto">
-              <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-                <h2 className="text-base font-bold text-white">Medical History</h2>
-                {currentPatient?.history?.map(item => (
-                  <div key={item.id} className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/60 space-y-1">
-                    <div className="text-teal-400 font-bold text-xs">{item.procedure} ({item.date})</div>
-                    <p className="text-sm text-slate-200">{item.notes}</p>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Patient Clinical History</h2>
+                  <p className="text-xs text-slate-400">
+                    Showing treatment history for <span className="text-teal-400 font-semibold">{currentPatient?.name}</span> ({currentPatient?.id})
+                  </p>
+                </div>
+                {currentUser.role !== 'patient' && (
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <select
+                      value={selectedPatientId}
+                      onChange={(e) => setSelectedPatientId(e.target.value)}
+                      className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-2.5"
+                    >
+                      {patients.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => setShowAddHistoryModal(true)}
+                      className="px-3.5 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shrink-0"
+                    >
+                      <Plus className="w-4 h-4" /> Add Record
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-4">
+                {currentPatient?.history && currentPatient.history.length > 0 ? (
+                  currentPatient.history.map(item => (
+                    <div key={item.id} className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-slate-700/50">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-1 bg-teal-500/10 text-teal-400 border border-teal-500/20 font-bold text-xs rounded-lg">
+                            {item.procedure}
+                          </span>
+                          <span className="text-xs font-mono text-slate-400">Tooth {item.tooth}</span>
+                        </div>
+                        <span className="text-xs text-slate-400 font-medium">{item.date}</span>
+                      </div>
+                      <p className="text-sm text-slate-200">{item.notes}</p>
+                      <div className="text-[11px] text-slate-400 flex items-center justify-between pt-1">
+                        <span>Clinic: {item.clinic}</span>
+                        <span>Doctor: {item.doctor}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-500 text-sm">
+                    No clinical procedure records found for this patient.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'clinics' && (
+            <div className="space-y-6 max-w-4xl mx-auto">
+              <div className="flex justify-between items-center bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Multi-Branch Clinic Administration</h2>
+                  <p className="text-xs text-slate-400">View operating branches, BIR TIN, and doctor availability hours</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {clinics.map(clinic => (
+                  <div key={clinic.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="p-2 bg-teal-500/10 text-teal-400 rounded-xl border border-teal-500/20 font-bold text-xs">
+                          BRANCH ID: {clinic.id}
+                        </div>
+                        {currentUser.role === 'dentist' && (
+                          <button
+                            onClick={() => { setActiveClinic(clinic); setShowEditClinicModal(true); }}
+                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-400 rounded-xl text-xs font-semibold"
+                          >
+                            Edit Settings
+                          </button>
+                        )}
+                      </div>
+                      <h3 className="font-bold text-white text-base mb-1">{clinic.name}</h3>
+                      <p className="text-xs text-slate-400 mb-2">{clinic.address}</p>
+                      <p className="text-[11px] font-mono text-teal-300 mb-4">BIR TIN: {clinic.tin || '000-000-000-000'}</p>
+
+                      <div className="bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/50">
+                        <div className="text-[10px] uppercase font-semibold text-slate-400">Doctor Operating Schedule</div>
+                        <div className="text-sm font-bold text-white mt-0.5">{clinic.schedule}</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-slate-800 flex justify-between items-center">
+                      <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Online & Operational
+                      </span>
+                      {currentUser.role === 'patient' && (
+                        <button
+                          onClick={() => {
+                            setBookingData(prev => ({ ...prev, clinicName: clinic.name }));
+                            setActiveTab('appointments');
+                            setShowBookingModal(true);
+                          }}
+                          className="px-3 py-1.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs"
+                        >
+                          Book Here
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {activeTab === 'clinics' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-              {clinics.map(clinic => (
-                <div key={clinic.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                  <h3 className="font-bold text-white text-base mb-1">{clinic.name}</h3>
-                  <p className="text-xs text-slate-400">{clinic.address}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
           {activeTab === 'appointments' && (
-            <div className="max-w-5xl mx-auto bg-slate-900 rounded-2xl border border-slate-800 p-5">
-              <h2 className="text-base font-bold text-white mb-4">Appointments</h2>
-              {appointments.map(apt => (
-                <div key={apt.id} className="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl mb-2 text-sm">
-                  <div>{apt.patientName} - {apt.service} ({apt.date})</div>
-                  <div className="font-bold text-teal-400">₱{apt.amount}</div>
+            <div className="space-y-6 max-w-5xl mx-auto">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Appointments & Billing</h2>
+                  <p className="text-xs text-slate-400">Manage clinic bookings and GCash payments</p>
                 </div>
-              ))}
+                {currentUser.role === 'patient' && (
+                  <button
+                    onClick={() => setShowBookingModal(true)}
+                    className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" /> Book Appointment
+                  </button>
+                )}
+              </div>
+
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm min-w-[750px]">
+                    <thead className="bg-slate-950 border-b border-slate-800 text-xs text-slate-400 uppercase">
+                      <tr>
+                        <th className="p-4">Patient</th>
+                        <th className="p-4">Service</th>
+                        <th className="p-4">Clinic Branch</th>
+                        <th className="p-4">Date & Time</th>
+                        <th className="p-4">Amount</th>
+                        <th className="p-4 text-right">Payment</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800 text-slate-300">
+                      {appointments.map(apt => (
+                        <tr key={apt.id} className="hover:bg-slate-800/50">
+                          <td className="p-4 font-semibold text-white">{apt.patientName}</td>
+                          <td className="p-4">{apt.service}</td>
+                          <td className="p-4 text-xs text-teal-400 font-medium">{apt.clinicName}</td>
+                          <td className="p-4">{apt.date} at {apt.time}</td>
+                          <td className="p-4 font-bold text-white">₱{apt.amount}</td>
+                          <td className="p-4 text-right">
+                            {apt.paid ? (
+                              <span className="text-xs text-emerald-400 font-bold flex items-center justify-end gap-1">
+                                <CheckCircle2 className="w-4 h-4" /> Paid via GCash
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => { setActivePaymentApt(apt); setShowPaymentModal(true); }}
+                                className="px-3 py-1.5 bg-teal-500/10 border border-teal-500/30 text-teal-400 hover:bg-teal-500 hover:text-slate-950 rounded-xl text-xs font-semibold"
+                              >
+                                Pay GCash
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 
           {activeTab === 'vitals' && (
-            <div className="max-w-4xl mx-auto bg-slate-900 p-6 rounded-2xl border border-slate-800">
-              <h2 className="text-base font-bold text-white mb-4">Vital Signs</h2>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-slate-800/50 p-4 rounded-xl">
-                  <div className="text-xs text-slate-400">BP</div>
-                  <div className="text-xl font-bold">{currentPatient?.vitals.systolic}/{currentPatient?.vitals.diastolic}</div>
-                </div>
+            <div className="space-y-6 max-w-4xl mx-auto">
+              <div className="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
+                <h2 className="text-base sm:text-lg font-bold text-white">Pre-Anesthesia Vital Signs Intake</h2>
+                <p className="text-xs text-slate-400">Review patient cardiovascular screening</p>
               </div>
+
+              {currentPatient && (
+                <div className="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-2">
+                    <div>
+                      <h3 className="font-bold text-white text-base">{currentPatient.name}</h3>
+                      <p className="text-xs text-slate-400">ID: {currentPatient.id} | Age: {currentPatient.age} | Gender: {currentPatient.gender}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold self-start sm:self-auto ${
+                      isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic)
+                        ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                        : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    }`}>
+                      {isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic) ? 'Hypertensive' : 'Normal Risk'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                      <div className="text-xs text-slate-400 mb-1">Blood Pressure</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.systolic} / {currentPatient.vitals.diastolic} <span className="text-xs text-slate-400">mmHg</span></div>
+                    </div>
+                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                      <div className="text-xs text-slate-400 mb-1">Heart Rate</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.hr} <span className="text-xs text-slate-400">bpm</span></div>
+                    </div>
+                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                      <div className="text-xs text-slate-400 mb-1">Oxygen SpO2</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.spo2}%</div>
+                    </div>
+                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                      <div className="text-xs text-slate-400 mb-1">Temperature</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.temp} °C</div>
+                    </div>
+                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                      <div className="text-xs text-slate-400 mb-1">Body Weight</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.weight} kg</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'patients' && (
-            <div className="max-w-5xl mx-auto bg-slate-900 p-6 rounded-2xl border border-slate-800">
-              <h2 className="text-base font-bold text-white mb-4">Patients</h2>
-              {patients.map(p => (
-                <div key={p.id} className="text-sm text-slate-300 py-2 border-b border-slate-800">
-                  {p.name} ({p.phone})
+            <div className="space-y-6 max-w-5xl mx-auto">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Patient Database</h2>
+                  <p className="text-xs text-slate-400">Manage records and reset passwords</p>
                 </div>
-              ))}
+                <button
+                  onClick={() => setShowNewPatientModal(true)}
+                  className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-4 h-4" /> Register Patient
+                </button>
+              </div>
+
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm min-w-[650px]">
+                    <thead className="bg-slate-950 border-b border-slate-800 text-xs text-slate-400 uppercase">
+                      <tr>
+                        <th className="p-4">ID & Name</th>
+                        <th className="p-4">Contact</th>
+                        <th className="p-4">Age / Gender</th>
+                        <th className="p-4">Vitals BP</th>
+                        <th className="p-4 text-right">Security</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800 text-slate-300">
+                      {patients.map(p => (
+                        <tr key={p.id} className="hover:bg-slate-800/50">
+                          <td className="p-4">
+                            <div className="font-bold text-white">{p.name}</div>
+                            <div className="text-xs text-slate-500">{p.id}</div>
+                          </td>
+                          <td className="p-4">
+                            <div>{p.phone}</div>
+                            <div className="text-xs text-slate-400">{p.email}</div>
+                          </td>
+                          <td className="p-4">{p.age} y/o ({p.gender})</td>
+                          <td className="p-4 font-mono text-xs">{p.vitals.systolic}/{p.vitals.diastolic} mmHg</td>
+                          <td className="p-4 text-right">
+                            <button
+                              onClick={() => triggerPasswordReset(p.id, 'patient')}
+                              className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-slate-950 rounded-xl text-xs font-semibold"
+                            >
+                              Reset Password
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 
           {activeTab === 'chat' && (
-            <div className="max-w-4xl mx-auto h-[550px] bg-slate-900 rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
-              <div className="p-4 border-b border-slate-800 flex justify-between items-center">
+            <div className="max-w-4xl mx-auto h-[550px] sm:h-[600px] bg-slate-900 rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
+              <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <h3 className="font-bold text-white text-base">Messenger Inbox</h3>
-                <select
-                  value={chatRecipientId}
-                  onChange={(e) => setChatRecipientId(e.target.value)}
-                  className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-1.5"
-                >
-                  {currentUser.role === 'patient' ? (
-                    <option value="DOC-1">Dr. Estrada, DDM (Dentist)</option>
-                  ) : (
-                    patients.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))
-                  )}
-                </select>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-slate-400">Chat with:</label>
+                  <select
+                    value={chatRecipientId}
+                    onChange={(e) => setChatRecipientId(e.target.value)}
+                    className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-1.5 focus:outline-none"
+                  >
+                    {currentUser.role === 'patient' ? (
+                      <option value="DOC-1">Dr. Estrada, DDM (Dentist)</option>
+                    ) : (
+                      <>
+                        <optgroup label="Patients">
+                          {patients.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </optgroup>
+                        <optgroup label="Assistants">
+                          {assistants.filter(a => a.id !== currentUser.id).map(a => (
+                            <option key={a.id} value={a.id}>{a.name}</option>
+                          ))}
+                        </optgroup>
+                      </>
+                    )}
+                  </select>
+                </div>
               </div>
+
               <div className="flex-1 p-4 overflow-y-auto space-y-3">
-                {activeChatMessages.map(msg => {
-                  const isMe = msg.senderId === currentUser.id;
-                  return (
-                    <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                      <div className="text-[10px] text-slate-400 mb-1">{msg.senderName} • {msg.timestamp}</div>
-                      <div className={`p-3 rounded-2xl max-w-xs text-sm ${isMe ? 'bg-teal-500 text-slate-950 font-medium' : 'bg-slate-800 text-white border border-slate-700'}`}>
-                        {msg.text}
+                {activeChatMessages.length > 0 ? (
+                  activeChatMessages.map(msg => {
+                    const isMe = msg.senderId === currentUser.id;
+                    return (
+                      <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                        <div className="text-[10px] text-slate-400 mb-1">{msg.senderName} • {msg.timestamp}</div>
+                        <div className={`p-3 rounded-2xl max-w-xs sm:max-w-sm text-sm ${
+                          isMe ? 'bg-teal-500 text-slate-950 font-medium' : 'bg-slate-800 text-white border border-slate-700'
+                        }`}>
+                          {msg.text}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-20 text-slate-500 text-xs">
+                    No messages in this thread yet. Send a message to start the conversation!
+                  </div>
+                )}
               </div>
+
               <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-800 flex gap-2">
                 <input
                   type="text"
                   placeholder="Type a message..."
                   value={chatInputText}
                   onChange={(e) => setChatInputText(e.target.value)}
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
                 />
                 <button type="submit" className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1">
                   <Send className="w-4 h-4" /> Send
@@ -759,37 +1189,400 @@ export default function App() {
         </main>
       </div>
 
+      {/* MODALS */}
       {showConsultationModal && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-white text-base">New Consultation</h3>
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+              <h3 className="font-bold text-white text-base">New Consultation & Follow-Up</h3>
               <button onClick={() => setShowConsultationModal(false)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleSaveConsultation} className="space-y-4">
-              <input
-                type="text"
-                required
-                placeholder="Chief Complaint"
-                value={consultationData.chiefComplaint}
-                onChange={(e) => setConsultationData({ ...consultationData, chiefComplaint: e.target.value })}
-                className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
-              />
-              <textarea
-                rows="2"
-                required
-                placeholder="Diagnosis"
-                value={consultationData.diagnosis}
-                onChange={(e) => setConsultationData({ ...consultationData, diagnosis: e.target.value })}
-                className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
-              />
-              <div className="flex justify-end gap-3">
-                <button type="button" onClick={() => setShowConsultationModal(false)} className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">Save</button>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Chief Complaint</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Toothache on lower right molar"
+                  value={consultationData.chiefComplaint}
+                  onChange={(e) => setConsultationData({ ...consultationData, chiefComplaint: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Clinical Diagnosis</label>
+                <textarea
+                  rows="2"
+                  required
+                  placeholder="Diagnosis notes..."
+                  value={consultationData.diagnosis}
+                  onChange={(e) => setConsultationData({ ...consultationData, diagnosis: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                ></textarea>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Prescription (Rx)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Mefenamic Acid 500mg every 8 hours"
+                  value={consultationData.prescription}
+                  onChange={(e) => setConsultationData({ ...consultationData, prescription: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Schedule Follow-Up Date (Optional)</label>
+                <input
+                  type="date"
+                  value={consultationData.followUpDate}
+                  onChange={(e) => setConsultationData({ ...consultationData, followUpDate: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowConsultationModal(false)} className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
+                  Save Encounter
+                </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showAddHistoryModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+              <h3 className="font-bold text-white text-base">Add Treatment Record</h3>
+              <button onClick={() => setShowAddHistoryModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleAddHistoryRecord} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Procedure</label>
+                <input
+                  type="text"
+                  required
+                  value={newHistoryEntry.procedure}
+                  onChange={(e) => setNewHistoryEntry({ ...newHistoryEntry, procedure: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Tooth (e.g. #14, All)</label>
+                <input
+                  type="text"
+                  required
+                  value={newHistoryEntry.tooth}
+                  onChange={(e) => setNewHistoryEntry({ ...newHistoryEntry, tooth: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Clinical Notes & Observations</label>
+                <textarea
+                  rows="3"
+                  required
+                  value={newHistoryEntry.notes}
+                  onChange={(e) => setNewHistoryEntry({ ...newHistoryEntry, notes: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                ></textarea>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowAddHistoryModal(false)} className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
+                  Save Record
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditClinicModal && activeClinic && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+              <h3 className="font-bold text-white text-base">Edit Branch Settings</h3>
+              <button onClick={() => setShowEditClinicModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setClinics(clinics.map(c => c.id === activeClinic.id ? activeClinic : c));
+                setShowEditClinicModal(false);
+                addNotification('Branch Updated', `Settings for ${activeClinic.name} saved.`);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Branch Name</label>
+                <input
+                  type="text"
+                  value={activeClinic.name}
+                  onChange={(e) => setActiveClinic({ ...activeClinic, name: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Address / Location</label>
+                <input
+                  type="text"
+                  value={activeClinic.address}
+                  onChange={(e) => setActiveClinic({ ...activeClinic, address: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">BIR Tax ID Number (TIN)</label>
+                <input
+                  type="text"
+                  value={activeClinic.tin || ''}
+                  onChange={(e) => setActiveClinic({ ...activeClinic, tin: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Operating Schedule</label>
+                <input
+                  type="text"
+                  value={activeClinic.schedule}
+                  onChange={(e) => setActiveClinic({ ...activeClinic, schedule: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowEditClinicModal(false)} className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showNewPatientModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+              <h3 className="font-bold text-white text-base sm:text-lg">Register Patient & Initial Vitals</h3>
+              <button onClick={() => setShowNewPatientModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreatePatient} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={newPatientData.name}
+                    onChange={(e) => setNewPatientData({ ...newPatientData, name: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    required
+                    value={newPatientData.phone}
+                    onChange={(e) => setNewPatientData({ ...newPatientData, phone: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={newPatientData.email}
+                    onChange={(e) => setNewPatientData({ ...newPatientData, email: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Age</label>
+                  <input
+                    type="number"
+                    required
+                    value={newPatientData.age}
+                    onChange={(e) => setNewPatientData({ ...newPatientData, age: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-800">
+                <h4 className="text-xs font-bold uppercase text-teal-400 mb-3">Pre-Anesthesia Vitals Baseline</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-1">Systolic BP</label>
+                    <input
+                      type="number"
+                      required
+                      value={newPatientData.systolic}
+                      onChange={(e) => setNewPatientData({ ...newPatientData, systolic: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-1">Diastolic BP</label>
+                    <input
+                      type="number"
+                      required
+                      value={newPatientData.diastolic}
+                      onChange={(e) => setNewPatientData({ ...newPatientData, diastolic: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-1">Heart Rate</label>
+                    <input
+                      type="number"
+                      required
+                      value={newPatientData.hr}
+                      onChange={(e) => setNewPatientData({ ...newPatientData, hr: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowNewPatientModal(false)}
+                  className="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2.5 bg-teal-500 text-slate-950 rounded-xl text-xs font-bold"
+                >
+                  Save Record
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showBookingModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
+            <h3 className="font-bold text-white text-lg mb-4">Book Dental Appointment</h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const newApt = {
+                  id: `APT-${Date.now()}`,
+                  patientId: currentUser.id,
+                  patientName: currentUser.name,
+                  service: bookingData.service,
+                  clinicName: bookingData.clinicName,
+                  date: bookingData.date || '2026-11-10',
+                  time: bookingData.time,
+                  status: 'Pending',
+                  amount: bookingData.amount,
+                  paid: false
+                };
+                setAppointments([...appointments, newApt]);
+                setShowBookingModal(false);
+                addNotification('Appointment Booked', `Successfully requested booking for ${bookingData.service}.`);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Select Clinic Branch</label>
+                <select
+                  value={bookingData.clinicName}
+                  onChange={(e) => setBookingData({ ...bookingData, clinicName: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
+                >
+                  {clinics.map(c => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Service</label>
+                <select
+                  value={bookingData.service}
+                  onChange={(e) => {
+                    const price = e.target.value === 'Tooth Extraction' ? 1500 : e.target.value === 'Root Canal' ? 4500 : 1200;
+                    setBookingData({ ...bookingData, service: e.target.value, amount: price });
+                  }}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
+                >
+                  <option value="Dental Cleaning">Dental Cleaning (₱1,200)</option>
+                  <option value="Tooth Extraction">Tooth Extraction (₱1,500)</option>
+                  <option value="Root Canal">Root Canal Treatment (₱4,500)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Date</label>
+                <input
+                  type="date"
+                  required
+                  value={bookingData.date}
+                  onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowBookingModal(false)} className="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs">
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
+                  Confirm Booking
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showPaymentModal && activePaymentApt && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm text-center">
+            <h3 className="font-bold text-white text-lg mb-1">GCash Express Payment</h3>
+            <p className="text-xs text-slate-400 mb-4">{activePaymentApt.service} - ₱{activePaymentApt.amount}</p>
+
+            <div className="bg-white p-4 rounded-2xl inline-block mb-4 shadow-lg">
+              <QrCode className="w-32 h-32 sm:w-36 sm:h-36 text-slate-900 mx-auto" />
+              <div className="text-[10px] text-slate-500 mt-2 font-mono">Merchant: DentiClinic Inc.</div>
+            </div>
+
+            <button
+              onClick={() => {
+                setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed' } : a));
+                setShowPaymentModal(false);
+                addNotification('Payment Confirmed', `GCash payment of ₱${activePaymentApt.amount} processed successfully.`);
+              }}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20"
+            >
+              Simulate GCash Paid Confirmation
+            </button>
           </div>
         </div>
       )}
