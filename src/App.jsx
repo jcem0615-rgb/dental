@@ -855,7 +855,7 @@ export default function App() {
                     <select
                       value={selectedPatientId}
                       onChange={(e) => setSelectedPatientId(e.target.value)}
-                      className="w-full sm:w-auto bg-slate-900 border border-slate-800 text-white rounded-xl text-xs px-3 py-2 focus:outline-none focus:border-teal-500"
+                      className="w-full sm:w-auto bg-slate-900 text-white border border-slate-800 rounded-xl text-xs px-3 py-2 focus:outline-none focus:border-teal-500 [color-scheme:dark]"
                     >
                       {patients.map(p => (
                         <option key={p.id} value={p.id} className="bg-slate-900 text-white">{p.name} ({p.id})</option>
@@ -1064,7 +1064,7 @@ export default function App() {
                     <select
                       value={selectedPatientId}
                       onChange={(e) => setSelectedPatientId(e.target.value)}
-                      className="bg-slate-900 border border-slate-800 text-white rounded-xl text-xs px-3 py-2.5"
+                      className="bg-slate-900 text-white border border-slate-800 rounded-xl text-xs px-3 py-2.5 [color-scheme:dark]"
                     >
                       {patients.map(p => (
                         <option key={p.id} value={p.id} className="bg-slate-900 text-white">{p.name}</option>
@@ -1259,7 +1259,7 @@ export default function App() {
                     type="date"
                     value={selectedSalesDate}
                     onChange={(e) => setSelectedSalesDate(e.target.value)}
-                    className="bg-transparent text-white text-xs font-bold focus:outline-none cursor-pointer"
+                    className="bg-transparent text-white text-xs font-bold focus:outline-none cursor-pointer [color-scheme:dark]"
                   />
                 </div>
               </div>
@@ -1430,7 +1430,7 @@ export default function App() {
                   <select
                     value={chatRecipientId}
                     onChange={(e) => setChatRecipientId(e.target.value)}
-                    className="bg-slate-900 border border-slate-800 text-white rounded-xl text-xs px-3 py-1.5 focus:outline-none"
+                    className="bg-slate-900 text-white border border-slate-800 rounded-xl text-xs px-3 py-1.5 focus:outline-none [color-scheme:dark]"
                   >
                     {currentUser.role === 'patient' ? (
                       <option value="DOC-1" className="bg-slate-900 text-white">Dr. Estrada, DDM (Dentist)</option>
@@ -1506,7 +1506,7 @@ export default function App() {
                 <select
                   value={consultationData.service}
                   onChange={(e) => setConsultationData({ ...consultationData, service: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 text-white border border-slate-800 rounded-xl px-3 py-2 text-sm [color-scheme:dark]"
                 >
                   <option value="Dental Consultation" className="bg-slate-900 text-white">Dental Consultation</option>
                   <option value="Dental Cleaning" className="bg-slate-900 text-white">Dental Cleaning</option>
@@ -1579,7 +1579,7 @@ export default function App() {
                   type="date"
                   value={consultationData.followUpDate}
                   onChange={(e) => setConsultationData({ ...consultationData, followUpDate: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm [color-scheme:dark]"
                 />
               </div>
               <div className="flex justify-end gap-3 pt-2">
@@ -1872,7 +1872,7 @@ export default function App() {
                   <select
                     value={walkInData.service}
                     onChange={(e) => setWalkInData({ ...walkInData, service: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
+                    className="w-full bg-slate-900 text-white border border-slate-800 rounded-xl px-3 py-2 text-sm [color-scheme:dark]"
                   >
                     <option value="Dental Consultation" className="bg-slate-900 text-white">Dental Consultation</option>
                     <option value="Dental Cleaning" className="bg-slate-900 text-white">Dental Cleaning</option>
@@ -1997,7 +1997,7 @@ export default function App() {
                 <select
                   value={bookingData.clinicName}
                   onChange={(e) => setBookingData({ ...bookingData, clinicName: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-sm"
+                  className="w-full bg-slate-900 text-white border border-slate-800 rounded-xl px-3 py-2.5 text-sm [color-scheme:dark]"
                 >
                   {clinics.map(c => (
                     <option key={c.id} value={c.name} className="bg-slate-900 text-white">{c.name}</option>
@@ -2010,7 +2010,7 @@ export default function App() {
                 <select
                   value={bookingData.service}
                   onChange={(e) => setBookingData({ ...bookingData, service: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-sm"
+                  className="w-full bg-slate-900 text-white border border-slate-800 rounded-xl px-3 py-2.5 text-sm [color-scheme:dark]"
                 >
                   <option value="Dental Cleaning" className="bg-slate-900 text-white">Dental Cleaning</option>
                   <option value="Tooth Extraction" className="bg-slate-900 text-white">Tooth Extraction</option>
@@ -2040,7 +2040,7 @@ export default function App() {
                   required
                   value={bookingData.date}
                   onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-sm [color-scheme:dark]"
                 />
               </div>
 
