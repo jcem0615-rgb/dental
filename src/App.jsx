@@ -404,6 +404,31 @@ export default function App() {
     addNotification('Consultation Saved', `Recorded consultation & follow-up for ${currentPatient.name}.`);
   };
 
+  const handleAddHistoryRecord = (e) => {
+    e.preventDefault();
+    if (!currentPatient) return;
+    const entry = {
+      id: `H-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      procedure: newHistoryEntry.procedure,
+      tooth: newHistoryEntry.tooth,
+      clinic: newHistoryEntry.clinic,
+      doctor: currentUser.name,
+      notes: newHistoryEntry.notes
+    };
+
+    setPatients(patients.map(p => {
+      if (p.id === currentPatient.id) {
+        return { ...p, history: [entry, ...(p.history || [])] };
+      }
+      return p;
+    }));
+
+    setShowAddHistoryModal(false);
+    setNewHistoryEntry({ procedure: 'Composite Filling', tooth: '#1', clinic: 'DentiClinic - Malasiqui Main', doctor: 'Dr. Estrada', notes: '' });
+    addNotification('History Record Added', `Added treatment record for ${currentPatient.name}.`);
+  };
+
   const updateToothCondition = (toothNum, cond) => {
     if (!currentPatient) return;
     setPatients(patients.map(p => {
@@ -439,17 +464,17 @@ export default function App() {
 
   const allPaidAppointments = appointments.filter(apt => apt.paid);
   
-  // Sales for the Selected Date
+  // Sales for the Selected Date (normalized payment method check)
   const selectedDatePaidAppointments = allPaidAppointments.filter(apt => apt.date === selectedSalesDate);
   const totalSelectedDateSales = selectedDatePaidAppointments.reduce((sum, apt) => sum + (apt.amount || 0), 0);
-  const cashSelectedDateSales = selectedDatePaidAppointments.filter(apt => apt.paymentMethod === 'Cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
-  const gcashSelectedDateSales = selectedDatePaidAppointments.filter(apt => apt.paymentMethod === 'GCash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
+  const cashSelectedDateSales = selectedDatePaidAppointments.filter(apt => (apt.paymentMethod || 'cash').toLowerCase() === 'cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
+  const gcashSelectedDateSales = selectedDatePaidAppointments.filter(apt => (apt.paymentMethod || '').toLowerCase() === 'gcash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
 
   // Monthly Sales based on the month of the selected date
   const monthlyPaidAppointments = allPaidAppointments.filter(apt => apt.date && apt.date.startsWith(currentMonthStr));
   const totalMonthlySales = monthlyPaidAppointments.reduce((sum, apt) => sum + (apt.amount || 0), 0);
-  const cashMonthlySales = monthlyPaidAppointments.filter(apt => apt.paymentMethod === 'Cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
-  const gcashMonthlySales = monthlyPaidAppointments.filter(apt => apt.paymentMethod === 'GCash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
+  const cashMonthlySales = monthlyPaidAppointments.filter(apt => (apt.paymentMethod || 'cash').toLowerCase() === 'cash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
+  const gcashMonthlySales = monthlyPaidAppointments.filter(apt => (apt.paymentMethod || '').toLowerCase() === 'gcash').reduce((sum, apt) => sum + (apt.amount || 0), 0);
 
   const activeChairPatient = appointments.find(a => a.status === 'In-Chair');
 
@@ -1112,7 +1137,7 @@ export default function App() {
                           <td className="p-4 text-right">
                             {apt.paid ? (
                               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold ${
-                                apt.paymentMethod === 'Cash' 
+                                (apt.paymentMethod || '').toLowerCase() === 'cash' 
                                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
                                   : 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
                               }`}>
@@ -1237,7 +1262,7 @@ export default function App() {
                             <td className="p-3">{apt.time}</td>
                             <td className="p-3">
                               <span className={`px-2 py-0.5 rounded-md font-bold ${
-                                apt.paymentMethod === 'Cash' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'
+                                (apt.paymentMethod || '').toLowerCase() === 'cash' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'
                               }`}>
                                 {apt.paymentMethod || 'Cash'}
                               </span>
