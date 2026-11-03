@@ -19,7 +19,10 @@ import {
   AlertTriangle,
   QrCode,
   CheckCircle2,
-  X
+  Clock,
+  MapPin,
+  X,
+  Edit3
 } from 'lucide-react';
 
 export default function App() {
@@ -80,11 +83,19 @@ export default function App() {
     ];
   });
 
+  const [clinics, setClinics] = useState(() => {
+    const saved = localStorage.getItem('denti_clinics');
+    return saved ? JSON.parse(saved) : [
+      { id: 'C-1', name: 'DentiClinic - Malasiqui Main', address: 'Canan Norte, Malasiqui, Pangasinan', schedule: 'Mon, Wed, Fri: 9:00 AM - 5:00 PM' },
+      { id: 'C-2', name: 'DentiClinic - Dagupan Branch', address: 'Tapuac District, Dagupan City', schedule: 'Tue, Thu, Sat: 9:00 AM - 4:00 PM' }
+    ];
+  });
+
   const [appointments, setAppointments] = useState(() => {
     const saved = localStorage.getItem('denti_appointments');
     return saved ? JSON.parse(saved) : [
-      { id: 'APT-1', patientId: 'P-101', patientName: 'Maria Santos', service: 'Tooth Extraction', date: '2026-11-05', time: '10:00 AM', status: 'Confirmed', amount: 1500, paid: true },
-      { id: 'APT-2', patientId: 'P-102', patientName: 'Juan Dela Cruz', service: 'Dental Cleaning', date: '2026-11-06', time: '02:00 PM', status: 'Pending', amount: 1200, paid: false }
+      { id: 'APT-1', patientId: 'P-101', patientName: 'Maria Santos', service: 'Tooth Extraction', clinicName: 'DentiClinic - Malasiqui Main', date: '2026-11-05', time: '10:00 AM', status: 'Confirmed', amount: 1500, paid: true },
+      { id: 'APT-2', patientId: 'P-102', patientName: 'Juan Dela Cruz', service: 'Dental Cleaning', clinicName: 'DentiClinic - Dagupan Branch', date: '2026-11-06', time: '02:00 PM', status: 'Pending', amount: 1200, paid: false }
     ];
   });
 
@@ -106,6 +117,8 @@ export default function App() {
   const [showNewPatientModal, setShowNewPatientModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showEditClinicModal, setShowEditClinicModal] = useState(false);
+  const [activeClinic, setActiveClinic] = useState(null);
   const [activePaymentApt, setActivePaymentApt] = useState(null);
 
   // Form States
@@ -115,7 +128,7 @@ export default function App() {
   });
 
   const [bookingData, setBookingData] = useState({
-    service: 'Dental Cleaning', date: '', time: '09:00 AM', amount: 1200
+    service: 'Dental Cleaning', clinicName: 'DentiClinic - Malasiqui Main', date: '', time: '09:00 AM', amount: 1200
   });
 
   // Sync to LocalStorage
@@ -123,6 +136,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem('denti_appointments', JSON.stringify(appointments)); }, [appointments]);
   useEffect(() => { localStorage.setItem('denti_messages', JSON.stringify(messages)); }, [messages]);
   useEffect(() => { localStorage.setItem('denti_assistants', JSON.stringify(assistants)); }, [assistants]);
+  useEffect(() => { localStorage.setItem('denti_clinics', JSON.stringify(clinics)); }, [clinics]);
 
   // Login Handler
   const handleLogin = (e) => {
@@ -253,6 +267,27 @@ export default function App() {
     };
     setMessages([...messages, newMsg]);
     setChatInputText('');
+  };
+
+  const ToothIcon = ({ condition }) => {
+    let fillColor = "#38bdf8";
+    if (condition === 'Caries') fillColor = "#f43f5e";
+    if (condition === 'Filled') fillColor = "#fbbf24";
+    if (condition === 'Extracted') fillColor = "#475569";
+    if (condition === 'Crown') fillColor = "#a855f7";
+    if (condition === 'Root Canal') fillColor = "#ec4899";
+
+    return (
+      <svg className="w-6 h-7 mx-auto my-0.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M7 3C4.5 3 3 5 3 7.5C3 11 5 13.5 7 16C8.2 17.5 8.5 19.5 9.5 21C10 21.8 11 22 12 22C13 22 14 21.8 14.5 21C15.5 19.5 15.8 17.5 17 16C19 13.5 21 11 21 7.5C21 5 19.5 3 17 3C14.5 3 13 5 12 7C11 5 9.5 3 7 3Z"
+          fill={fillColor}
+          fillOpacity={condition === 'Extracted' ? 0.3 : 0.85}
+          stroke={fillColor}
+          strokeWidth="1.5"
+        />
+      </svg>
+    );
   };
 
   // LOGIN SCREEN
@@ -438,8 +473,9 @@ export default function App() {
         <nav className="bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1.5 overflow-x-auto shrink-0">
           {[
             { id: 'odontogram', label: 'Odontogram', icon: Activity, roles: ['dentist', 'assistant', 'patient'] },
-            { id: 'vitals', label: 'Vital Signs', icon: ShieldAlert, roles: ['dentist', 'assistant'] },
+            { id: 'clinics', label: 'Clinics & Schedule', icon: MapPin, roles: ['dentist', 'assistant', 'patient'] },
             { id: 'appointments', label: 'Appointments', icon: Calendar, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'vitals', label: 'Vital Signs', icon: ShieldAlert, roles: ['dentist', 'assistant'] },
             { id: 'patients', label: 'Patients List', icon: Users, roles: ['dentist', 'assistant'] },
             { id: 'chat', label: 'Clinical Chat', icon: MessageSquare, roles: ['dentist', 'assistant', 'patient'] },
           ]
@@ -465,13 +501,13 @@ export default function App() {
 
         {/* Dynamic Content Panel */}
         <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
-          {/* TAB 1: ODONTOGRAM CHART (FIXED GRID SYSTEM) */}
+          {/* TAB 1: ODONTOGRAM CHART */}
           {activeTab === 'odontogram' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
                 <div>
                   <h2 className="text-base sm:text-lg font-bold text-white">32-Tooth Universal Odontogram</h2>
-                  <p className="text-xs text-slate-400">Map dental conditions & surfaces</p>
+                  <p className="text-xs text-slate-400">Click any tooth to examine or update its medical condition</p>
                 </div>
 
                 {currentUser.role !== 'patient' && (
@@ -503,13 +539,20 @@ export default function App() {
                 </div>
               )}
 
-              {/* Tooth Grid - Fixed with Inline Grid Style */}
+              {/* Tooth Grid */}
               <div className="bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-6">
-                {/* Upper Arch */}
                 <div className="overflow-x-auto pb-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">Upper Arch (Maxillary)</h3>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Upper Arch (Maxillary)</h3>
+                    <div className="flex items-center gap-3 text-[10px] text-slate-400">
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-400"></span>Healthy</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500"></span>Caries</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400"></span>Filled</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-500"></span>Extracted</span>
+                    </div>
+                  </div>
                   <div
-                    className="grid gap-1.5 sm:gap-2 min-w-[700px]"
+                    className="grid gap-1.5 sm:gap-2 min-w-[750px]"
                     style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
                   >
                     {Array.from({ length: 16 }, (_, i) => i + 1).map(num => {
@@ -518,29 +561,29 @@ export default function App() {
                         <button
                           key={num}
                           onClick={() => setSelectedTooth(num)}
-                          className={`p-1.5 sm:p-2 rounded-xl border flex flex-col items-center justify-between text-xs transition min-h-[56px] sm:min-h-[64px] ${
+                          className={`p-1.5 rounded-xl border flex flex-col items-center justify-between text-xs transition h-20 ${
                             selectedTooth === num
-                              ? 'border-teal-500 bg-teal-500/10 text-teal-400'
+                              ? 'border-teal-500 bg-teal-500/15 shadow-md shadow-teal-500/10'
                               : cond === 'Caries'
-                              ? 'border-rose-500/40 bg-rose-500/10 text-rose-400'
+                              ? 'border-rose-500/50 bg-rose-500/10 text-rose-400'
                               : cond === 'Extracted'
-                              ? 'border-slate-700 bg-slate-950 text-slate-600 line-through'
-                              : 'border-slate-800 bg-slate-800/50 text-slate-300 hover:border-slate-700'
+                              ? 'border-slate-700 bg-slate-950 text-slate-600 opacity-60'
+                              : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-600'
                           }`}
                         >
-                          <span className="text-[9px] sm:text-[10px] text-slate-400">#{num}</span>
-                          <span className="font-bold text-[10px] sm:text-xs my-1">{cond ? cond[0] : '✓'}</span>
+                          <span className="text-[10px] font-mono text-slate-400">#{num}</span>
+                          <ToothIcon condition={cond} />
+                          <span className="text-[9px] font-bold truncate max-w-full text-slate-300">{cond || 'Healthy'}</span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Lower Arch */}
                 <div className="overflow-x-auto pb-2 border-t border-slate-800 pt-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">Lower Arch (Mandibular)</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Lower Arch (Mandibular)</h3>
                   <div
-                    className="grid gap-1.5 sm:gap-2 min-w-[700px]"
+                    className="grid gap-1.5 sm:gap-2 min-w-[750px]"
                     style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
                   >
                     {Array.from({ length: 16 }, (_, i) => 32 - i).map(num => {
@@ -549,34 +592,38 @@ export default function App() {
                         <button
                           key={num}
                           onClick={() => setSelectedTooth(num)}
-                          className={`p-1.5 sm:p-2 rounded-xl border flex flex-col items-center justify-between text-xs transition min-h-[56px] sm:min-h-[64px] ${
+                          className={`p-1.5 rounded-xl border flex flex-col items-center justify-between text-xs transition h-20 ${
                             selectedTooth === num
-                              ? 'border-teal-500 bg-teal-500/10 text-teal-400'
+                              ? 'border-teal-500 bg-teal-500/15 shadow-md shadow-teal-500/10'
                               : cond === 'Caries'
-                              ? 'border-rose-500/40 bg-rose-500/10 text-rose-400'
+                              ? 'border-rose-500/50 bg-rose-500/10 text-rose-400'
                               : cond === 'Extracted'
-                              ? 'border-slate-700 bg-slate-950 text-slate-600 line-through'
-                              : 'border-slate-800 bg-slate-800/50 text-slate-300 hover:border-slate-700'
+                              ? 'border-slate-700 bg-slate-950 text-slate-600 opacity-60'
+                              : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-600'
                           }`}
                         >
-                          <span className="text-[9px] sm:text-[10px] text-slate-400">#{num}</span>
-                          <span className="font-bold text-[10px] sm:text-xs my-1">{cond ? cond[0] : '✓'}</span>
+                          <span className="text-[10px] font-mono text-slate-400">#{num}</span>
+                          <ToothIcon condition={cond} />
+                          <span className="text-[9px] font-bold truncate max-w-full text-slate-300">{cond || 'Healthy'}</span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Tooth Controls */}
                 {currentUser.role !== 'patient' && (
                   <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <span className="text-xs font-semibold text-teal-400">Selected Tooth: #{selectedTooth}</span>
+                    <span className="text-xs font-semibold text-teal-400">Selected Tooth: #{selectedTooth} ({currentPatient?.conditions[selectedTooth] || 'Healthy'})</span>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {['Healthy', 'Caries', 'Filled', 'Extracted', 'Crown', 'Root Canal'].map(cond => (
                         <button
                           key={cond}
-                          onClick={() => updateToothCondition(selectedTooth, cond)}
-                          className="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-800 border border-slate-700 hover:border-teal-500 text-slate-300"
+                          onClick={() => updateToothCondition(selectedTooth, cond === 'Healthy' ? undefined : cond)}
+                          className={`px-2.5 py-1.5 rounded-xl text-xs font-medium border transition ${
+                            (currentPatient?.conditions[selectedTooth] === cond || (!currentPatient?.conditions[selectedTooth] && cond === 'Healthy'))
+                              ? 'bg-teal-500 text-slate-950 border-teal-400 font-bold'
+                              : 'bg-slate-800 border-slate-700 hover:border-teal-500 text-slate-300'
+                          }`}
                         >
                           {cond}
                         </button>
@@ -588,437 +635,20 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 2: VITALS INTAKE */}
-          {activeTab === 'vitals' && (
+          {/* TAB 2: CLINICS & SCHEDULE (WITH DOCTOR EDIT CAPABILITY) */}
+          {activeTab === 'clinics' && (
             <div className="space-y-6 max-w-4xl mx-auto">
-              <div className="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
-                <h2 className="text-base sm:text-lg font-bold text-white">Pre-Anesthesia Vital Signs Intake</h2>
-                <p className="text-xs text-slate-400">Review patient cardiovascular screening</p>
+              <div className="flex justify-between items-center bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-white">Clinic Branches & Doctor Schedules</h2>
+                  <p className="text-xs text-slate-400">View operating branches and doctor availability hours</p>
+                </div>
               </div>
 
-              {currentPatient && (
-                <div className="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {clinics.map(clinic => (
+                  <div key={clinic.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
                     <div>
-                      <h3 className="font-bold text-white text-base">{currentPatient.name}</h3>
-                      <p className="text-xs text-slate-400">ID: {currentPatient.id} | Age: {currentPatient.age} | Gender: {currentPatient.gender}</p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold self-start sm:self-auto ${
-                      isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic)
-                        ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                        : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    }`}>
-                      {isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic) ? 'Hypertensive' : 'Normal Risk'}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                      <div className="text-xs text-slate-400 mb-1">Blood Pressure</div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.systolic} / {currentPatient.vitals.diastolic} <span className="text-xs text-slate-400">mmHg</span></div>
-                    </div>
-                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                      <div className="text-xs text-slate-400 mb-1">Heart Rate</div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.hr} <span className="text-xs text-slate-400">bpm</span></div>
-                    </div>
-                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                      <div className="text-xs text-slate-400 mb-1">Oxygen SpO2</div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.spo2}%</div>
-                    </div>
-                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                      <div className="text-xs text-slate-400 mb-1">Temperature</div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.temp} °C</div>
-                    </div>
-                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                      <div className="text-xs text-slate-400 mb-1">Body Weight</div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{currentPatient.vitals.weight} kg</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 3: APPOINTMENTS & GCASH */}
-          {activeTab === 'appointments' && (
-            <div className="space-y-6 max-w-5xl mx-auto">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
-                <div>
-                  <h2 className="text-base sm:text-lg font-bold text-white">Appointments & Billing</h2>
-                  <p className="text-xs text-slate-400">Manage schedules and GCash payments</p>
-                </div>
-                {currentUser.role === 'patient' && (
-                  <button
-                    onClick={() => setShowBookingModal(true)}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" /> Book Appointment
-                  </button>
-                )}
-              </div>
-
-              <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm min-w-[650px]">
-                    <thead className="bg-slate-950 border-b border-slate-800 text-xs text-slate-400 uppercase">
-                      <tr>
-                        <th className="p-4">Patient</th>
-                        <th className="p-4">Service</th>
-                        <th className="p-4">Date & Time</th>
-                        <th className="p-4">Amount</th>
-                        <th className="p-4">Status</th>
-                        <th className="p-4 text-right">Payment</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800 text-slate-300">
-                      {appointments.map(apt => (
-                        <tr key={apt.id} className="hover:bg-slate-800/50">
-                          <td className="p-4 font-semibold text-white">{apt.patientName}</td>
-                          <td className="p-4">{apt.service}</td>
-                          <td className="p-4">{apt.date} at {apt.time}</td>
-                          <td className="p-4 font-bold text-white">₱{apt.amount}</td>
-                          <td className="p-4">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                              apt.status === 'Confirmed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
-                            }`}>
-                              {apt.status}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right">
-                            {apt.paid ? (
-                              <span className="text-xs text-emerald-400 font-bold flex items-center justify-end gap-1">
-                                <CheckCircle2 className="w-4 h-4" /> Paid via GCash
-                              </span>
-                            ) : (
-                              <button
-                                onClick={() => { setActivePaymentApt(apt); setShowPaymentModal(true); }}
-                                className="px-3 py-1.5 bg-teal-500/10 border border-teal-500/30 text-teal-400 hover:bg-teal-500 hover:text-slate-950 rounded-xl text-xs font-semibold"
-                              >
-                                Pay GCash
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: PATIENTS LIST & RESETS */}
-          {activeTab === 'patients' && (
-            <div className="space-y-6 max-w-5xl mx-auto">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
-                <div>
-                  <h2 className="text-base sm:text-lg font-bold text-white">Patient Database</h2>
-                  <p className="text-xs text-slate-400">Manage records and reset passwords</p>
-                </div>
-                <button
-                  onClick={() => setShowNewPatientModal(true)}
-                  className="w-full sm:w-auto px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2"
-                >
-                  <Plus className="w-4 h-4" /> Register Patient
-                </button>
-              </div>
-
-              <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm min-w-[650px]">
-                    <thead className="bg-slate-950 border-b border-slate-800 text-xs text-slate-400 uppercase">
-                      <tr>
-                        <th className="p-4">ID & Name</th>
-                        <th className="p-4">Contact</th>
-                        <th className="p-4">Age / Gender</th>
-                        <th className="p-4">Vitals BP</th>
-                        <th className="p-4 text-right">Security</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800 text-slate-300">
-                      {patients.map(p => (
-                        <tr key={p.id} className="hover:bg-slate-800/50">
-                          <td className="p-4">
-                            <div className="font-bold text-white">{p.name}</div>
-                            <div className="text-xs text-slate-500">{p.id}</div>
-                          </td>
-                          <td className="p-4">
-                            <div>{p.phone}</div>
-                            <div className="text-xs text-slate-400">{p.email}</div>
-                          </td>
-                          <td className="p-4">{p.age} y/o ({p.gender})</td>
-                          <td className="p-4 font-mono text-xs">{p.vitals.systolic}/{p.vitals.diastolic} mmHg</td>
-                          <td className="p-4 text-right">
-                            <button
-                              onClick={() => triggerPasswordReset(p.id, 'patient')}
-                              className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-slate-950 rounded-xl text-xs font-semibold"
-                            >
-                              Reset Password
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 5: CLINICAL CHAT */}
-          {activeTab === 'chat' && (
-            <div className="max-w-4xl mx-auto h-[550px] sm:h-[600px] bg-slate-900 rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
-              <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <h3 className="font-bold text-white text-base">Clinical Messaging</h3>
-                <div className="flex items-center gap-2">
-                  <label className="text-xs text-slate-400">To:</label>
-                  <select
-                    value={chatRecipientId}
-                    onChange={(e) => setChatRecipientId(e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-1.5 focus:outline-none"
-                  >
-                    {patients.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} (Patient)</option>
-                    ))}
-                    {assistants.map(a => (
-                      <option key={a.id} value={a.id}>{a.name} (Assistant)</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Chat Thread */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-3">
-                {messages.map(msg => {
-                  const isMe = msg.fromId === currentUser.id;
-                  return (
-                    <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                      <div className="text-[10px] text-slate-400 mb-1">{msg.fromName} • {msg.timestamp}</div>
-                      <div className={`p-3 rounded-2xl max-w-xs sm:max-w-sm text-sm ${
-                        isMe ? 'bg-teal-500 text-slate-950 font-medium' : 'bg-slate-800 text-white border border-slate-700'
-                      }`}>
-                        {msg.text}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Chat Input */}
-              <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-800 flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Type clinical message..."
-                  value={chatInputText}
-                  onChange={(e) => setChatInputText(e.target.value)}
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
-                />
-                <button type="submit" className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1">
-                  <Send className="w-4 h-4" /> Send
-                </button>
-              </form>
-            </div>
-          )}
-        </main>
-      </div>
-
-      {/* NEW PATIENT MODAL */}
-      {showNewPatientModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8">
-            <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-white text-base sm:text-lg">Register Patient & Initial Vitals</h3>
-              <button onClick={() => setShowNewPatientModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreatePatient} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={newPatientData.name}
-                    onChange={(e) => setNewPatientData({ ...newPatientData, name: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Phone Number</label>
-                  <input
-                    type="text"
-                    required
-                    value={newPatientData.phone}
-                    onChange={(e) => setNewPatientData({ ...newPatientData, phone: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    required
-                    value={newPatientData.email}
-                    onChange={(e) => setNewPatientData({ ...newPatientData, email: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Age</label>
-                  <input
-                    type="number"
-                    required
-                    value={newPatientData.age}
-                    onChange={(e) => setNewPatientData({ ...newPatientData, age: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-slate-800">
-                <h4 className="text-xs font-bold uppercase text-teal-400 mb-3">Pre-Anesthesia Vitals Baseline</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[10px] text-slate-400 mb-1">Systolic BP</label>
-                    <input
-                      type="number"
-                      required
-                      value={newPatientData.systolic}
-                      onChange={(e) => setNewPatientData({ ...newPatientData, systolic: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-slate-400 mb-1">Diastolic BP</label>
-                    <input
-                      type="number"
-                      required
-                      value={newPatientData.diastolic}
-                      onChange={(e) => setNewPatientData({ ...newPatientData, diastolic: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-slate-400 mb-1">Heart Rate</label>
-                    <input
-                      type="number"
-                      required
-                      value={newPatientData.hr}
-                      onChange={(e) => setNewPatientData({ ...newPatientData, hr: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowNewPatientModal(false)}
-                  className="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2.5 bg-teal-500 text-slate-950 rounded-xl text-xs font-bold"
-                >
-                  Save Record
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* BOOKING MODAL */}
-      {showBookingModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
-            <h3 className="font-bold text-white text-lg mb-4">Book Dental Appointment</h3>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const newApt = {
-                  id: `APT-${Date.now()}`,
-                  patientId: currentUser.id,
-                  patientName: currentUser.name,
-                  service: bookingData.service,
-                  date: bookingData.date || '2026-11-10',
-                  time: bookingData.time,
-                  status: 'Pending',
-                  amount: bookingData.amount,
-                  paid: false
-                };
-                setAppointments([...appointments, newApt]);
-                setShowBookingModal(false);
-              }}
-              className="space-y-4"
-            >
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Service</label>
-                <select
-                  value={bookingData.service}
-                  onChange={(e) => {
-                    const price = e.target.value === 'Tooth Extraction' ? 1500 : e.target.value === 'Root Canal' ? 4500 : 1200;
-                    setBookingData({ ...bookingData, service: e.target.value, amount: price });
-                  }}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
-                >
-                  <option value="Dental Cleaning">Dental Cleaning (₱1,200)</option>
-                  <option value="Tooth Extraction">Tooth Extraction (₱1,500)</option>
-                  <option value="Root Canal">Root Canal Treatment (₱4,500)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Date</label>
-                <input
-                  type="date"
-                  required
-                  value={bookingData.date}
-                  onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
-                />
-              </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowBookingModal(false)} className="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs">
-                  Cancel
-                </button>
-                <button type="submit" className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
-                  Confirm Booking
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* GCASH PAYMENT MODAL */}
-      {showPaymentModal && activePaymentApt && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm text-center">
-            <h3 className="font-bold text-white text-lg mb-1">GCash Express Payment</h3>
-            <p className="text-xs text-slate-400 mb-4">{activePaymentApt.service} - ₱{activePaymentApt.amount}</p>
-
-            <div className="bg-white p-4 rounded-2xl inline-block mb-4 shadow-lg">
-              <QrCode className="w-32 h-32 sm:w-36 sm:h-36 text-slate-900 mx-auto" />
-              <div className="text-[10px] text-slate-500 mt-2 font-mono">Merchant: DentiClinic Inc.</div>
-            </div>
-
-            <button
-              onClick={() => {
-                setAppointments(appointments.map(a => a.id === activePaymentApt.id ? { ...a, paid: true, status: 'Confirmed' } : a));
-                setShowPaymentModal(false);
-              }}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-blue-600/20"
-            >
-              Simulate GCash Paid Confirmation
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="p-2 bg-teal-500/10 text-teal-400 rounded-xl border border-teal-500/20">
+                          <MapPin className="w-5 h-5"
