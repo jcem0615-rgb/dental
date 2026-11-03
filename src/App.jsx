@@ -51,7 +51,7 @@ export default function App() {
     { id: 1, targetRole: 'all', title: 'System Notice', text: 'Welcome to DentiClinic PWA enterprise platform.', time: 'Just now', read: false }
   ]);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
-  const [notificationFilter, setNotificationFilter] = useState('all'); // 'all' | 'unread' | 'read'
+  const [notificationFilter, setNotificationFilter] = useState('all');
 
   const [patients, setPatients] = useState(() => {
     try {
@@ -187,7 +187,7 @@ export default function App() {
   const addNotification = (title, text, targetRole = 'all') => {
     const newN = { 
       id: Date.now(), 
-      targetRole, // 'all', 'staff' (dentist/assistant), or 'patient'
+      targetRole, 
       title, 
       text, 
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
@@ -514,19 +514,16 @@ export default function App() {
 
   const activeChairPatient = appointments.find(a => a.status === 'In-Chair');
 
-  // Filtered notifications based on user role and selected filter tab
   const visibleNotifications = notifications.filter(n => {
-    // Role filter
     if (currentUser.role === 'patient') {
       if (n.targetRole !== 'all' && n.targetRole !== 'patient') return false;
     } else {
       if (n.targetRole === 'patient') return false;
     }
 
-    // Tab filter
     if (notificationFilter === 'unread') return !n.read;
     if (notificationFilter === 'read') return n.read;
-    return true; // 'all'
+    return true;
   });
 
   const ToothIcon = ({ condition }) => {
@@ -580,7 +577,7 @@ export default function App() {
                   placeholder="09171234567 or email@domain.com"
                   value={loginIdentifier}
                   onChange={(e) => setLoginIdentifier(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-4 py-3 text-sm text-white focus:outline-none focus:border-teal-500"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-3 text-sm text-white focus:outline-none focus:border-teal-500"
                 />
               </div>
             </div>
@@ -595,7 +592,7 @@ export default function App() {
                   placeholder="••••••••"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-10 py-3 text-sm text-white focus:outline-none focus:border-teal-500"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-10 py-3 text-sm text-white focus:outline-none focus:border-teal-500"
                 />
                 <button
                   type="button"
@@ -618,13 +615,13 @@ export default function App() {
           <div className="mt-6 pt-4 border-t border-slate-800">
             <p className="text-xs text-slate-400 text-center mb-3">Quick Demo Access (Select Role):</p>
             <div className="grid grid-cols-3 gap-2">
-              <button onClick={() => quickSwitch('dentist')} className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-teal-400">
+              <button onClick={() => quickSwitch('dentist')} className="py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-medium text-teal-400">
                 Dentist
               </button>
-              <button onClick={() => quickSwitch('assistant')} className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-amber-400">
+              <button onClick={() => quickSwitch('assistant')} className="py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-medium text-amber-400">
                 Assistant
               </button>
-              <button onClick={() => quickSwitch('patient')} className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-blue-400">
+              <button onClick={() => quickSwitch('patient')} className="py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-medium text-blue-400">
                 Patient
               </button>
             </div>
@@ -636,8 +633,8 @@ export default function App() {
 
   if (showForcePasswordModal) {
     return (
-      <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+      <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl text-slate-100">
           <div className="flex items-center gap-3 text-amber-400 mb-4">
             <Lock className="w-6 h-6" />
             <h2 className="text-lg font-bold text-white">Password Change Required</h2>
@@ -660,7 +657,7 @@ export default function App() {
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
               />
             </div>
             <div>
@@ -670,7 +667,7 @@ export default function App() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
               />
             </div>
             <button
@@ -705,7 +702,7 @@ export default function App() {
           <div className="relative">
             <button
               onClick={() => setShowNotificationCenter(!showNotificationCenter)}
-              className="p-2 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition relative"
+              className="p-2 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition relative"
               title="Notifications"
             >
               <Bell className="w-4 h-4" />
@@ -715,7 +712,7 @@ export default function App() {
             </button>
 
             {showNotificationCenter && (
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 z-50">
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 z-50 text-slate-100">
                 <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
                   <h4 className="font-bold text-xs uppercase text-slate-300">System Notifications</h4>
                   <button
@@ -726,7 +723,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* NOTIFICATION FILTER TABS */}
                 <div className="flex items-center gap-1.5 mb-3 bg-slate-950 p-1 rounded-xl border border-slate-800">
                   {['all', 'unread', 'read'].map(filter => (
                     <button
@@ -746,7 +742,7 @@ export default function App() {
                 <div className="space-y-2.5 max-h-64 overflow-y-auto">
                   {visibleNotifications.length > 0 ? (
                     visibleNotifications.map(n => (
-                      <div key={n.id} className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50 text-xs">
+                      <div key={n.id} className="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-xs">
                         <div className="flex justify-between font-semibold text-white mb-0.5">
                           <span>{n.title}</span>
                           <span className="text-[10px] text-slate-400">{n.time}</span>
@@ -770,7 +766,7 @@ export default function App() {
           </div>
           <button
             onClick={() => setCurrentUser(null)}
-            className="p-2 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition"
+            className="p-2 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition"
             title="Log Out"
           >
             <LogOut className="w-4 h-4" />
@@ -812,7 +808,7 @@ export default function App() {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col md:flex-row">
+      <div className="flex-1 flex flex-col md:flex-row bg-slate-950">
         <nav className="bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1.5 overflow-x-auto shrink-0">
           {[
             { id: 'odontogram', label: 'Odontogram', icon: Activity, roles: ['dentist', 'assistant', 'patient'] },
@@ -844,7 +840,7 @@ export default function App() {
             })}
         </nav>
 
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-950 text-slate-100">
           {activeTab === 'odontogram' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
@@ -859,10 +855,10 @@ export default function App() {
                     <select
                       value={selectedPatientId}
                       onChange={(e) => setSelectedPatientId(e.target.value)}
-                      className="w-full sm:w-auto bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-2 focus:outline-none focus:border-teal-500"
+                      className="w-full sm:w-auto bg-slate-900 border border-slate-800 text-white rounded-xl text-xs px-3 py-2 focus:outline-none focus:border-teal-500"
                     >
                       {patients.map(p => (
-                        <option key={p.id} value={p.id}>{p.name} ({p.id})</option>
+                        <option key={p.id} value={p.id} className="bg-slate-900 text-white">{p.name} ({p.id})</option>
                       ))}
                     </select>
                   </div>
@@ -905,8 +901,8 @@ export default function App() {
                               : cond === 'Caries'
                               ? 'border-rose-500/50 bg-rose-500/10 text-rose-400'
                               : cond === 'Extracted'
-                              ? 'border-slate-700 bg-slate-950 text-slate-600 opacity-60'
-                              : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-600'
+                              ? 'border-slate-800 bg-slate-950 text-slate-600 opacity-60'
+                              : 'border-slate-800 bg-slate-900 text-slate-300 hover:border-slate-700'
                           }`}
                         >
                           <span className="text-[10px] font-mono text-slate-400">#{num}</span>
@@ -933,8 +929,8 @@ export default function App() {
                               : cond === 'Caries'
                               ? 'border-rose-500/50 bg-rose-500/10 text-rose-400'
                               : cond === 'Extracted'
-                              ? 'border-slate-700 bg-slate-950 text-slate-600 opacity-60'
-                              : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-600'
+                              ? 'border-slate-800 bg-slate-950 text-slate-600 opacity-60'
+                              : 'border-slate-800 bg-slate-900 text-slate-300 hover:border-slate-700'
                           }`}
                         >
                           <span className="text-[10px] font-mono text-slate-400">#{num}</span>
@@ -957,7 +953,7 @@ export default function App() {
                           className={`px-2.5 py-1.5 rounded-xl text-xs font-medium border transition ${
                             (currentPatient?.conditions[selectedTooth] === cond || (!currentPatient?.conditions[selectedTooth] && cond === 'Healthy'))
                               ? 'bg-teal-500 text-slate-950 border-teal-400 font-bold'
-                              : 'bg-slate-800 border-slate-700 hover:border-teal-500 text-slate-300'
+                              : 'bg-slate-900 border-slate-800 hover:border-teal-500 text-slate-300'
                           }`}
                         >
                           {cond}
@@ -1009,7 +1005,7 @@ export default function App() {
                         </button>
                       </div>
                     ) : (
-                      <div className="bg-slate-800/50 p-6 rounded-xl text-center text-slate-400 text-xs">
+                      <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl text-center text-slate-400 text-xs">
                         Dental chair is currently vacant. Call a patient from the queue.
                       </div>
                     )}
@@ -1021,7 +1017,7 @@ export default function App() {
                   <div className="space-y-2 max-h-72 overflow-y-auto">
                     {appointments.filter(a => a.date === todayStr && a.status !== 'Completed').length > 0 ? (
                       appointments.filter(a => a.date === todayStr && a.status !== 'Completed').map((apt, idx) => (
-                        <div key={apt.id} className="flex justify-between items-center bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/60">
+                        <div key={apt.id} className="flex justify-between items-center bg-slate-900 p-3.5 rounded-xl border border-slate-800">
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-mono text-xs text-teal-400 font-bold">#{idx + 1}</span>
@@ -1068,10 +1064,10 @@ export default function App() {
                     <select
                       value={selectedPatientId}
                       onChange={(e) => setSelectedPatientId(e.target.value)}
-                      className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-2.5"
+                      className="bg-slate-900 border border-slate-800 text-white rounded-xl text-xs px-3 py-2.5"
                     >
                       {patients.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
+                        <option key={p.id} value={p.id} className="bg-slate-900 text-white">{p.name}</option>
                       ))}
                     </select>
                     <button
@@ -1087,8 +1083,8 @@ export default function App() {
               <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-4">
                 {currentPatient?.history && currentPatient.history.length > 0 ? (
                   currentPatient.history.map(item => (
-                    <div key={item.id} className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 space-y-2">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-slate-700/50">
+                    <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-slate-800">
                         <div className="flex items-center gap-2">
                           <span className="px-2.5 py-1 bg-teal-500/10 text-teal-400 border border-teal-500/20 font-bold text-xs rounded-lg">
                             {item.procedure}
@@ -1133,7 +1129,7 @@ export default function App() {
                         {currentUser.role === 'dentist' && (
                           <button
                             onClick={() => { setActiveClinic(clinic); setShowEditClinicModal(true); }}
-                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-400 rounded-xl text-xs font-semibold"
+                            className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-teal-400 rounded-xl text-xs font-semibold"
                           >
                             Edit Settings
                           </button>
@@ -1143,7 +1139,7 @@ export default function App() {
                       <p className="text-xs text-slate-400 mb-2">{clinic.address}</p>
                       <p className="text-[11px] font-mono text-teal-300 mb-4">BIR TIN: {clinic.tin || '000-000-000-000'}</p>
 
-                      <div className="bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/50">
+                      <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-800">
                         <div className="text-[10px] uppercase font-semibold text-slate-400">Doctor Operating Schedule</div>
                         <div className="text-sm font-bold text-white mt-0.5">{clinic.schedule}</div>
                       </div>
@@ -1206,7 +1202,7 @@ export default function App() {
                       {appointments
                         .filter(apt => currentUser.role === 'patient' ? apt.patientId === currentUser.id : true)
                         .map(apt => (
-                        <tr key={apt.id} className="hover:bg-slate-800/50">
+                        <tr key={apt.id} className="hover:bg-slate-900/50">
                           <td className="p-4 font-semibold text-white">{apt.patientName}</td>
                           <td className="p-4">{apt.service}</td>
                           <td className="p-4 text-xs text-teal-400 font-medium">{apt.clinicName}</td>
@@ -1256,7 +1252,7 @@ export default function App() {
                   <p className="text-xs text-slate-400">Select any calendar date to audit transactions and revenue analytics.</p>
                 </div>
 
-                <div className="flex items-center gap-2 bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl">
+                <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl">
                   <Calendar className="w-4 h-4 text-teal-400" />
                   <span className="text-xs text-slate-300 font-medium">Audit Date:</span>
                   <input
@@ -1268,9 +1264,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* SUMMARY CARDS */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Selected Date Overview */}
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-lg">
                   <div className="flex justify-between items-center">
                     <div>
@@ -1280,18 +1274,17 @@ export default function App() {
                     <div className="text-2xl font-extrabold text-white">₱{totalSelectedDateSales.toLocaleString()}</div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
-                    <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                    <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
                       <div className="text-[10px] text-slate-400">Cash Collections</div>
                       <div className="text-sm font-bold text-emerald-400">₱{cashSelectedDateSales.toLocaleString()}</div>
                     </div>
-                    <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                    <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
                       <div className="text-[10px] text-slate-400">GCash Collections</div>
                       <div className="text-sm font-bold text-blue-400">₱{gcashSelectedDateSales.toLocaleString()}</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Monthly Monitoring */}
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-lg">
                   <div className="flex justify-between items-center">
                     <div>
@@ -1301,11 +1294,11 @@ export default function App() {
                     <div className="text-2xl font-extrabold text-white">₱{totalMonthlySales.toLocaleString()}</div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
-                    <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                    <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
                       <div className="text-[10px] text-slate-400">Monthly Cash</div>
                       <div className="text-sm font-bold text-emerald-400">₱{cashMonthlySales.toLocaleString()}</div>
                     </div>
-                    <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                    <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
                       <div className="text-[10px] text-slate-400">Monthly GCash</div>
                       <div className="text-sm font-bold text-blue-400">₱{gcashMonthlySales.toLocaleString()}</div>
                     </div>
@@ -1313,7 +1306,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* TRANSACTION AUDIT TABLE FOR SELECTED DATE */}
               <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-4 shadow-lg">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Transaction Log for {selectedSalesDate}</h3>
@@ -1339,7 +1331,7 @@ export default function App() {
                     <tbody className="divide-y divide-slate-800 text-slate-300 text-xs">
                       {selectedDatePaidAppointments.length > 0 ? (
                         selectedDatePaidAppointments.map(apt => (
-                          <tr key={apt.id} className="hover:bg-slate-800/50">
+                          <tr key={apt.id} className="hover:bg-slate-900/50">
                             <td className="p-3 font-semibold text-white">{apt.patientName}</td>
                             <td className="p-3">{apt.service}</td>
                             <td className="p-3 text-teal-400">{apt.clinicName}</td>
@@ -1397,7 +1389,7 @@ export default function App() {
                     </thead>
                     <tbody className="divide-y divide-slate-800 text-slate-300">
                       {patients.map(p => (
-                        <tr key={p.id} className="hover:bg-slate-800/50">
+                        <tr key={p.id} className="hover:bg-slate-900/50">
                           <td className="p-4">
                             <div className="font-bold text-white">{p.name}</div>
                             <div className="text-xs text-slate-500">{p.id}</div>
@@ -1438,20 +1430,20 @@ export default function App() {
                   <select
                     value={chatRecipientId}
                     onChange={(e) => setChatRecipientId(e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-1.5 focus:outline-none"
+                    className="bg-slate-900 border border-slate-800 text-white rounded-xl text-xs px-3 py-1.5 focus:outline-none"
                   >
                     {currentUser.role === 'patient' ? (
-                      <option value="DOC-1">Dr. Estrada, DDM (Dentist)</option>
+                      <option value="DOC-1" className="bg-slate-900 text-white">Dr. Estrada, DDM (Dentist)</option>
                     ) : (
                       <>
-                        <optgroup label="Patients">
+                        <optgroup label="Patients" className="bg-slate-900 text-white">
                           {patients.map(p => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
+                            <option key={p.id} value={p.id} className="bg-slate-900 text-white">{p.name}</option>
                           ))}
                         </optgroup>
-                        <optgroup label="Assistants">
+                        <optgroup label="Assistants" className="bg-slate-900 text-white">
                           {assistants.filter(a => a.id !== currentUser.id).map(a => (
-                            <option key={a.id} value={a.id}>{a.name}</option>
+                            <option key={a.id} value={a.id} className="bg-slate-900 text-white">{a.name}</option>
                           ))}
                         </optgroup>
                       </>
@@ -1468,7 +1460,7 @@ export default function App() {
                       <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                         <div className="text-[10px] text-slate-400 mb-1">{msg.senderName} • {msg.timestamp}</div>
                         <div className={`p-3 rounded-2xl max-w-xs sm:max-w-sm text-sm ${
-                          isMe ? 'bg-teal-500 text-slate-950 font-medium' : 'bg-slate-800 text-white border border-slate-700'
+                          isMe ? 'bg-teal-500 text-slate-950 font-medium' : 'bg-slate-900 text-white border border-slate-800'
                         }`}>
                           {msg.text}
                         </div>
@@ -1488,7 +1480,7 @@ export default function App() {
                   placeholder="Type a message..."
                   value={chatInputText}
                   onChange={(e) => setChatInputText(e.target.value)}
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
+                  className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
                 />
                 <button type="submit" className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1">
                   <Send className="w-4 h-4" /> Send
@@ -1500,8 +1492,8 @@ export default function App() {
       </div>
 
       {showConsultationModal && currentUser.role !== 'patient' && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg">
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base">Service Encounter & Billing Form</h3>
               <button onClick={() => setShowConsultationModal(false)} className="text-slate-400 hover:text-white">
@@ -1514,13 +1506,13 @@ export default function App() {
                 <select
                   value={consultationData.service}
                   onChange={(e) => setConsultationData({ ...consultationData, service: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                 >
-                  <option value="Dental Consultation">Dental Consultation</option>
-                  <option value="Dental Cleaning">Dental Cleaning</option>
-                  <option value="Tooth Extraction">Tooth Extraction</option>
-                  <option value="Root Canal">Root Canal Treatment</option>
-                  <option value="Custom Service">Custom Service...</option>
+                  <option value="Dental Consultation" className="bg-slate-900 text-white">Dental Consultation</option>
+                  <option value="Dental Cleaning" className="bg-slate-900 text-white">Dental Cleaning</option>
+                  <option value="Tooth Extraction" className="bg-slate-900 text-white">Tooth Extraction</option>
+                  <option value="Root Canal" className="bg-slate-900 text-white">Root Canal Treatment</option>
+                  <option value="Custom Service" className="bg-slate-900 text-white">Custom Service...</option>
                 </select>
               </div>
 
@@ -1533,7 +1525,7 @@ export default function App() {
                     placeholder="Enter custom procedure name..."
                     value={consultationData.customService}
                     onChange={(e) => setConsultationData({ ...consultationData, customService: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                    className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                   />
                 </div>
               )}
@@ -1545,7 +1537,7 @@ export default function App() {
                   required
                   value={consultationData.amount}
                   onChange={(e) => setConsultationData({ ...consultationData, amount: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm font-bold text-teal-400"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm font-bold text-teal-400"
                 />
               </div>
 
@@ -1557,7 +1549,7 @@ export default function App() {
                   placeholder="e.g. Toothache on lower right molar"
                   value={consultationData.chiefComplaint}
                   onChange={(e) => setConsultationData({ ...consultationData, chiefComplaint: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                 />
               </div>
               <div>
@@ -1568,7 +1560,7 @@ export default function App() {
                   placeholder="Diagnosis notes..."
                   value={consultationData.diagnosis}
                   onChange={(e) => setConsultationData({ ...consultationData, diagnosis: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                 ></textarea>
               </div>
               <div>
@@ -1578,7 +1570,7 @@ export default function App() {
                   placeholder="e.g. Mefenamic Acid 500mg every 8 hours"
                   value={consultationData.prescription}
                   onChange={(e) => setConsultationData({ ...consultationData, prescription: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                 />
               </div>
               <div>
@@ -1587,7 +1579,7 @@ export default function App() {
                   type="date"
                   value={consultationData.followUpDate}
                   onChange={(e) => setConsultationData({ ...consultationData, followUpDate: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                 />
               </div>
               <div className="flex justify-end gap-3 pt-2">
@@ -1604,8 +1596,8 @@ export default function App() {
       )}
 
       {showAddHistoryModal && currentUser.role !== 'patient' && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base">Add Treatment Record</h3>
               <button onClick={() => setShowAddHistoryModal(false)} className="text-slate-400 hover:text-white">
@@ -1620,7 +1612,7 @@ export default function App() {
                   required
                   value={newHistoryEntry.procedure}
                   onChange={(e) => setNewHistoryEntry({ ...newHistoryEntry, procedure: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                 />
               </div>
               <div>
@@ -1630,7 +1622,7 @@ export default function App() {
                   required
                   value={newHistoryEntry.tooth}
                   onChange={(e) => setNewHistoryEntry({ ...newHistoryEntry, tooth: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                 />
               </div>
               <div>
@@ -1640,7 +1632,7 @@ export default function App() {
                   required
                   value={newHistoryEntry.notes}
                   onChange={(e) => setNewHistoryEntry({ ...newHistoryEntry, notes: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                 ></textarea>
               </div>
               <div className="flex justify-end gap-3 pt-2">
@@ -1657,8 +1649,8 @@ export default function App() {
       )}
 
       {showEditClinicModal && activeClinic && currentUser.role !== 'patient' && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base">Edit Branch Settings</h3>
               <button onClick={() => setShowEditClinicModal(false)} className="text-slate-400 hover:text-white">
@@ -1680,7 +1672,7 @@ export default function App() {
                   type="text"
                   value={activeClinic.name}
                   onChange={(e) => setActiveClinic({ ...activeClinic, name: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                 />
               </div>
               <div>
@@ -1689,7 +1681,7 @@ export default function App() {
                   type="text"
                   value={activeClinic.address}
                   onChange={(e) => setActiveClinic({ ...activeClinic, address: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                 />
               </div>
               <div>
@@ -1698,7 +1690,7 @@ export default function App() {
                   type="text"
                   value={activeClinic.tin || ''}
                   onChange={(e) => setActiveClinic({ ...activeClinic, tin: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                 />
               </div>
               <div>
@@ -1707,7 +1699,7 @@ export default function App() {
                   type="text"
                   value={activeClinic.schedule}
                   onChange={(e) => setActiveClinic({ ...activeClinic, schedule: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                 />
               </div>
               <div className="flex justify-end gap-3 pt-2">
@@ -1724,8 +1716,8 @@ export default function App() {
       )}
 
       {showNewPatientModal && currentUser.role !== 'patient' && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8">
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8 text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base sm:text-lg">Register Patient & Initial Vitals</h3>
               <button onClick={() => setShowNewPatientModal(false)} className="text-slate-400 hover:text-white">
@@ -1742,7 +1734,7 @@ export default function App() {
                     required
                     value={newPatientData.name}
                     onChange={(e) => setNewPatientData({ ...newPatientData, name: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                   />
                 </div>
                 <div>
@@ -1752,7 +1744,7 @@ export default function App() {
                     required
                     value={newPatientData.phone}
                     onChange={(e) => setNewPatientData({ ...newPatientData, phone: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                   />
                 </div>
                 <div>
@@ -1762,7 +1754,7 @@ export default function App() {
                     required
                     value={newPatientData.email}
                     onChange={(e) => setNewPatientData({ ...newPatientData, email: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                   />
                 </div>
                 <div>
@@ -1772,7 +1764,7 @@ export default function App() {
                     required
                     value={newPatientData.age}
                     onChange={(e) => setNewPatientData({ ...newPatientData, age: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                   />
                 </div>
               </div>
@@ -1787,7 +1779,7 @@ export default function App() {
                       required
                       value={newPatientData.systolic}
                       onChange={(e) => setNewPatientData({ ...newPatientData, systolic: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                     />
                   </div>
                   <div>
@@ -1797,7 +1789,7 @@ export default function App() {
                       required
                       value={newPatientData.diastolic}
                       onChange={(e) => setNewPatientData({ ...newPatientData, diastolic: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                     />
                   </div>
                   <div>
@@ -1807,7 +1799,7 @@ export default function App() {
                       required
                       value={newPatientData.hr}
                       onChange={(e) => setNewPatientData({ ...newPatientData, hr: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                     />
                   </div>
                 </div>
@@ -1834,8 +1826,8 @@ export default function App() {
       )}
 
       {showWalkInModal && currentUser.role !== 'patient' && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8">
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 w-full max-w-xl my-8 text-slate-100">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
               <h3 className="font-bold text-white text-base sm:text-lg">Walk-In Profile & Queue Registration</h3>
               <button onClick={() => setShowWalkInModal(false)} className="text-slate-400 hover:text-white">
@@ -1852,7 +1844,7 @@ export default function App() {
                     required
                     value={walkInData.name}
                     onChange={(e) => setWalkInData({ ...walkInData, name: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                   />
                 </div>
                 <div>
@@ -1862,7 +1854,7 @@ export default function App() {
                     required
                     value={walkInData.phone}
                     onChange={(e) => setWalkInData({ ...walkInData, phone: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                   />
                 </div>
                 <div>
@@ -1872,7 +1864,7 @@ export default function App() {
                     required
                     value={walkInData.age}
                     onChange={(e) => setWalkInData({ ...walkInData, age: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                   />
                 </div>
                 <div>
@@ -1880,13 +1872,13 @@ export default function App() {
                   <select
                     value={walkInData.service}
                     onChange={(e) => setWalkInData({ ...walkInData, service: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                    className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-sm"
                   >
-                    <option value="Dental Consultation">Dental Consultation</option>
-                    <option value="Dental Cleaning">Dental Cleaning</option>
-                    <option value="Tooth Extraction">Tooth Extraction</option>
-                    <option value="Root Canal">Root Canal Treatment</option>
-                    <option value="Custom Service">Custom Service...</option>
+                    <option value="Dental Consultation" className="bg-slate-900 text-white">Dental Consultation</option>
+                    <option value="Dental Cleaning" className="bg-slate-900 text-white">Dental Cleaning</option>
+                    <option value="Tooth Extraction" className="bg-slate-900 text-white">Tooth Extraction</option>
+                    <option value="Root Canal" className="bg-slate-900 text-white">Root Canal Treatment</option>
+                    <option value="Custom Service" className="bg-slate-900 text-white">Custom Service...</option>
                   </select>
                 </div>
               </div>
@@ -1900,7 +1892,7 @@ export default function App() {
                     placeholder="Enter custom procedure..."
                     value={walkInData.customService}
                     onChange={(e) => setWalkInData({ ...walkInData, customService: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                   />
                 </div>
               )}
@@ -1912,7 +1904,7 @@ export default function App() {
                   required
                   value={walkInData.amount}
                   onChange={(e) => setWalkInData({ ...walkInData, amount: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm font-bold text-teal-400"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm font-bold text-teal-400"
                 />
               </div>
 
@@ -1926,7 +1918,7 @@ export default function App() {
                       required
                       value={walkInData.systolic}
                       onChange={(e) => setWalkInData({ ...walkInData, systolic: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                     />
                   </div>
                   <div>
@@ -1936,7 +1928,7 @@ export default function App() {
                       required
                       value={walkInData.diastolic}
                       onChange={(e) => setWalkInData({ ...walkInData, diastolic: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                     />
                   </div>
                   <div>
@@ -1946,7 +1938,7 @@ export default function App() {
                       required
                       value={walkInData.hr}
                       onChange={(e) => setWalkInData({ ...walkInData, hr: e.target.value })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white"
                     />
                   </div>
                 </div>
@@ -1973,8 +1965,8 @@ export default function App() {
       )}
 
       {showBookingModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md text-slate-100">
             <h3 className="font-bold text-white text-lg mb-4">Book Dental Appointment</h3>
             <form
               onSubmit={(e) => {
@@ -2005,10 +1997,10 @@ export default function App() {
                 <select
                   value={bookingData.clinicName}
                   onChange={(e) => setBookingData({ ...bookingData, clinicName: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-sm"
                 >
                   {clinics.map(c => (
-                    <option key={c.id} value={c.name}>{c.name}</option>
+                    <option key={c.id} value={c.name} className="bg-slate-900 text-white">{c.name}</option>
                   ))}
                 </select>
               </div>
@@ -2018,12 +2010,12 @@ export default function App() {
                 <select
                   value={bookingData.service}
                   onChange={(e) => setBookingData({ ...bookingData, service: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-sm"
                 >
-                  <option value="Dental Cleaning">Dental Cleaning</option>
-                  <option value="Tooth Extraction">Tooth Extraction</option>
-                  <option value="Root Canal">Root Canal Treatment</option>
-                  <option value="Custom Service">Custom Service...</option>
+                  <option value="Dental Cleaning" className="bg-slate-900 text-white">Dental Cleaning</option>
+                  <option value="Tooth Extraction" className="bg-slate-900 text-white">Tooth Extraction</option>
+                  <option value="Root Canal" className="bg-slate-900 text-white">Root Canal Treatment</option>
+                  <option value="Custom Service" className="bg-slate-900 text-white">Custom Service...</option>
                 </select>
               </div>
 
@@ -2036,7 +2028,7 @@ export default function App() {
                     placeholder="Enter custom procedure..."
                     value={bookingData.customService}
                     onChange={(e) => setBookingData({ ...bookingData, customService: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
+                    className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-sm"
                   />
                 </div>
               )}
@@ -2048,7 +2040,7 @@ export default function App() {
                   required
                   value={bookingData.date}
                   onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm"
+                  className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-sm"
                 />
               </div>
 
@@ -2066,8 +2058,8 @@ export default function App() {
       )}
 
       {showPaymentModal && activePaymentApt && currentUser.role !== 'patient' && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm text-center space-y-4">
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm text-center space-y-4 text-slate-100">
             <h3 className="font-bold text-white text-lg">Select Payment Method</h3>
             <p className="text-xs text-slate-400">{activePaymentApt.service} - <span className="text-white font-bold">₱{activePaymentApt.amount}</span></p>
 
