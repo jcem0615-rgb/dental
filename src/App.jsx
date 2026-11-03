@@ -117,10 +117,7 @@ export default function App() {
   const [chatRecipientId, setChatRecipientId] = useState('P-101');
   const [chatInputText, setChatInputText] = useState('');
 
-  const [showNewPatientModal, setShowNewPatientModal] = useState(false);
-  const [showBookingModal, setShowBookingModal] = useState(false);
   const [showConsultationModal, setShowConsultationModal] = useState(false);
-
   const [consultationData, setConsultationData] = useState({
     chiefComplaint: '', diagnosis: '', prescription: '', followUpDate: ''
   });
@@ -266,7 +263,6 @@ export default function App() {
     addNotification('New Message', 'Message sent.');
   };
 
-  // Messenger logic: Filter messages between current user and the selected recipient thread
   const activeChatMessages = messages.filter(msg => 
     (msg.senderId === currentUser?.id && msg.receiverId === chatRecipientId) ||
     (msg.senderId === chatRecipientId && msg.receiverId === currentUser?.id)
@@ -360,4 +356,443 @@ export default function App() {
 
           <div className="mt-6 pt-4 border-t border-slate-800">
             <p className="text-xs text-slate-400 text-center mb-3">Quick Demo Access (Select Role):</p>
-            <div className="grid grid-cols-3
+            <div className="grid grid-cols-3 gap-2">
+              <button onClick={() => quickSwitch('dentist')} className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-teal-400">
+                Dentist
+              </button>
+              <button onClick={() => quickSwitch('assistant')} className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-amber-400">
+                Assistant
+              </button>
+              <button onClick={() => quickSwitch('patient')} className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-blue-400">
+                Patient
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showForcePasswordModal) {
+    return (
+      <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+          <div className="flex items-center gap-3 text-amber-400 mb-4">
+            <Lock className="w-6 h-6" />
+            <h2 className="text-lg font-bold text-white">Password Change Required</h2>
+          </div>
+          <p className="text-slate-400 text-sm mb-4">
+            Your password was reset by administration. Please set a new secure password.
+          </p>
+
+          {passwordError && (
+            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-sm">
+              {passwordError}
+            </div>
+          )}
+
+          <form onSubmit={handleForcePasswordChange} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">New Password</label>
+              <input
+                type="password"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Confirm New Password</label>
+              <input
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold py-3 rounded-xl text-sm"
+            >
+              Update Password & Continue
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+      <header className="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-teal-500/10 text-teal-400 rounded-xl border border-teal-500/20">
+            <Activity className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="font-bold text-white text-base leading-tight">DentiClinic PWA</h1>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 capitalize">{currentUser.role} Portal</span>
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <button
+              onClick={() => setShowNotificationCenter(!showNotificationCenter)}
+              className="p-2 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition relative"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              {notifications.some(n => !n.read) && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-teal-400"></span>
+              )}
+            </button>
+
+            {showNotificationCenter && (
+              <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 z-50">
+                <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
+                  <h4 className="font-bold text-xs uppercase text-slate-300">System Notifications</h4>
+                  <button
+                    onClick={() => setNotifications(notifications.map(n => ({ ...n, read: true })))}
+                    className="text-[10px] text-teal-400 hover:underline"
+                  >
+                    Mark read
+                  </button>
+                </div>
+                <div className="space-y-2.5 max-h-64 overflow-y-auto">
+                  {notifications.map(n => (
+                    <div key={n.id} className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50 text-xs">
+                      <div className="flex justify-between font-semibold text-white mb-0.5">
+                        <span>{n.title}</span>
+                        <span className="text-[10px] text-slate-400">{n.time}</span>
+                      </div>
+                      <p className="text-slate-300">{n.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="text-right hidden sm:block">
+            <div className="text-sm font-semibold text-white">{currentUser.name}</div>
+            <div className="text-xs text-slate-400">{currentUser.email || currentUser.phone}</div>
+          </div>
+          <button
+            onClick={() => setCurrentUser(null)}
+            className="p-2 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition"
+            title="Log Out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </header>
+
+      {resetSuccessMessage && (
+        <div className="bg-emerald-500/20 border-b border-emerald-500/30 px-4 py-2.5 text-xs text-emerald-300 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <span>{resetSuccessMessage}</span>
+        </div>
+      )}
+
+      <div className="flex-1 flex flex-col md:flex-row">
+        <nav className="bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 w-full md:w-64 p-3 flex md:flex-col gap-1.5 overflow-x-auto shrink-0">
+          {[
+            { id: 'odontogram', label: 'Odontogram', icon: Activity, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'consultation', label: 'Consultations & Follow-up', icon: Stethoscope, roles: ['dentist', 'assistant'] },
+            { id: 'history', label: 'Medical History', icon: FileText, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'clinics', label: 'Clinics & Branches', icon: Building2, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'appointments', label: 'Appointments', icon: Calendar, roles: ['dentist', 'assistant', 'patient'] },
+            { id: 'vitals', label: 'Vital Signs', icon: ShieldAlert, roles: ['dentist', 'assistant'] },
+            { id: 'patients', label: 'Patients List', icon: Users, roles: ['dentist', 'assistant'] },
+            { id: 'chat', label: 'Clinical Chat', icon: MessageSquare, roles: ['dentist', 'assistant', 'patient'] },
+          ]
+            .filter(tab => tab.roles.includes(currentUser.role))
+            .map(tab => {
+              const TabIcon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition shrink-0 whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                  }`}
+                >
+                  <TabIcon className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+        </nav>
+
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
+          {activeTab === 'odontogram' && (
+            <div className="space-y-6 max-w-5xl mx-auto">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800">
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-white">32-Tooth Universal Odontogram</h2>
+                  <p className="text-xs text-slate-400">Click any tooth to examine or update its medical condition</p>
+                </div>
+
+                {currentUser.role !== 'patient' && (
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <label className="text-xs text-slate-400 shrink-0">Patient:</label>
+                    <select
+                      value={selectedPatientId}
+                      onChange={(e) => setSelectedPatientId(e.target.value)}
+                      className="w-full sm:w-auto bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-2 focus:outline-none focus:border-teal-500"
+                    >
+                      {patients.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} ({p.id})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {currentPatient && isHypertensive(currentPatient.vitals.systolic, currentPatient.vitals.diastolic) && (
+                <div className="bg-rose-500/10 border border-rose-500/30 p-4 rounded-2xl flex items-start sm:items-center gap-3 text-rose-400">
+                  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 sm:mt-0" />
+                  <div>
+                    <h4 className="font-semibold text-sm text-rose-300">Pre-Anesthesia Hypertension Warning</h4>
+                    <p className="text-xs text-rose-400/90 mt-0.5">
+                      Patient BP is {currentPatient.vitals.systolic}/{currentPatient.vitals.diastolic} mmHg. Exercise caution with vasoconstrictor anesthetics.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-6">
+                <div className="overflow-x-auto pb-2">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Upper Arch (Maxillary)</h3>
+                  </div>
+                  <div className="grid gap-1.5 sm:gap-2 min-w-[750px]" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+                    {Array.from({ length: 16 }, (_, i) => i + 1).map(num => {
+                      const cond = currentPatient?.conditions[num];
+                      return (
+                        <button
+                          key={num}
+                          onClick={() => setSelectedTooth(num)}
+                          className={`p-1.5 rounded-xl border flex flex-col items-center justify-between text-xs transition h-20 ${
+                            selectedTooth === num
+                              ? 'border-teal-500 bg-teal-500/15 shadow-md shadow-teal-500/10'
+                              : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-600'
+                          }`}
+                        >
+                          <span className="text-[10px] font-mono text-slate-400">#{num}</span>
+                          <ToothIcon condition={cond} />
+                          <span className="text-[9px] font-bold truncate max-w-full text-slate-300">{cond || 'Healthy'}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto pb-2 border-t border-slate-800 pt-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Lower Arch (Mandibular)</h3>
+                  <div className="grid gap-1.5 sm:gap-2 min-w-[750px]" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+                    {Array.from({ length: 16 }, (_, i) => 32 - i).map(num => {
+                      const cond = currentPatient?.conditions[num];
+                      return (
+                        <button
+                          key={num}
+                          onClick={() => setSelectedTooth(num)}
+                          className={`p-1.5 rounded-xl border flex flex-col items-center justify-between text-xs transition h-20 ${
+                            selectedTooth === num
+                              ? 'border-teal-500 bg-teal-500/15 shadow-md shadow-teal-500/10'
+                              : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-600'
+                          }`}
+                        >
+                          <span className="text-[10px] font-mono text-slate-400">#{num}</span>
+                          <ToothIcon condition={cond} />
+                          <span className="text-[9px] font-bold truncate max-w-full text-slate-300">{cond || 'Healthy'}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {currentUser.role !== 'patient' && (
+                  <div className="pt-4 border-t border-slate-800 flex justify-between items-center gap-3 flex-wrap">
+                    <span className="text-xs font-semibold text-teal-400">Selected Tooth: #{selectedTooth}</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {['Healthy', 'Caries', 'Filled', 'Extracted', 'Crown', 'Root Canal'].map(cond => (
+                        <button
+                          key={cond}
+                          onClick={() => updateToothCondition(selectedTooth, cond === 'Healthy' ? undefined : cond)}
+                          className="px-2.5 py-1.5 rounded-xl text-xs font-medium border bg-slate-800 border-slate-700 hover:border-teal-500 text-slate-300"
+                        >
+                          {cond}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'consultation' && (
+            <div className="space-y-6 max-w-4xl mx-auto">
+              <div className="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                <h2 className="text-base font-bold text-white">Consultations & Follow-Up</h2>
+                <button onClick={() => setShowConsultationModal(true)} className="px-4 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">
+                  New Consultation
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'history' && (
+            <div className="space-y-6 max-w-5xl mx-auto">
+              <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+                <h2 className="text-base font-bold text-white">Medical History</h2>
+                {currentPatient?.history?.map(item => (
+                  <div key={item.id} className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/60 space-y-1">
+                    <div className="text-teal-400 font-bold text-xs">{item.procedure} ({item.date})</div>
+                    <p className="text-sm text-slate-200">{item.notes}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'clinics' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+              {clinics.map(clinic => (
+                <div key={clinic.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                  <h3 className="font-bold text-white text-base mb-1">{clinic.name}</h3>
+                  <p className="text-xs text-slate-400">{clinic.address}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'appointments' && (
+            <div className="max-w-5xl mx-auto bg-slate-900 rounded-2xl border border-slate-800 p-5">
+              <h2 className="text-base font-bold text-white mb-4">Appointments</h2>
+              {appointments.map(apt => (
+                <div key={apt.id} className="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl mb-2 text-sm">
+                  <div>{apt.patientName} - {apt.service} ({apt.date})</div>
+                  <div className="font-bold text-teal-400">₱{apt.amount}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'vitals' && (
+            <div className="max-w-4xl mx-auto bg-slate-900 p-6 rounded-2xl border border-slate-800">
+              <h2 className="text-base font-bold text-white mb-4">Vital Signs</h2>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-slate-800/50 p-4 rounded-xl">
+                  <div className="text-xs text-slate-400">BP</div>
+                  <div className="text-xl font-bold">{currentPatient?.vitals.systolic}/{currentPatient?.vitals.diastolic}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'patients' && (
+            <div className="max-w-5xl mx-auto bg-slate-900 p-6 rounded-2xl border border-slate-800">
+              <h2 className="text-base font-bold text-white mb-4">Patients</h2>
+              {patients.map(p => (
+                <div key={p.id} className="text-sm text-slate-300 py-2 border-b border-slate-800">
+                  {p.name} ({p.phone})
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'chat' && (
+            <div className="max-w-4xl mx-auto h-[550px] bg-slate-900 rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
+              <div className="p-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 className="font-bold text-white text-base">Messenger Inbox</h3>
+                <select
+                  value={chatRecipientId}
+                  onChange={(e) => setChatRecipientId(e.target.value)}
+                  className="bg-slate-800 border border-slate-700 text-white rounded-xl text-xs px-3 py-1.5"
+                >
+                  {currentUser.role === 'patient' ? (
+                    <option value="DOC-1">Dr. Estrada, DDM (Dentist)</option>
+                  ) : (
+                    patients.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))
+                  )}
+                </select>
+              </div>
+              <div className="flex-1 p-4 overflow-y-auto space-y-3">
+                {activeChatMessages.map(msg => {
+                  const isMe = msg.senderId === currentUser.id;
+                  return (
+                    <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                      <div className="text-[10px] text-slate-400 mb-1">{msg.senderName} • {msg.timestamp}</div>
+                      <div className={`p-3 rounded-2xl max-w-xs text-sm ${isMe ? 'bg-teal-500 text-slate-950 font-medium' : 'bg-slate-800 text-white border border-slate-700'}`}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-800 flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  value={chatInputText}
+                  onChange={(e) => setChatInputText(e.target.value)}
+                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+                />
+                <button type="submit" className="px-4 py-2.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1">
+                  <Send className="w-4 h-4" /> Send
+                </button>
+              </form>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {showConsultationModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-white text-base">New Consultation</h3>
+              <button onClick={() => setShowConsultationModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveConsultation} className="space-y-4">
+              <input
+                type="text"
+                required
+                placeholder="Chief Complaint"
+                value={consultationData.chiefComplaint}
+                onChange={(e) => setConsultationData({ ...consultationData, chiefComplaint: e.target.value })}
+                className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+              />
+              <textarea
+                rows="2"
+                required
+                placeholder="Diagnosis"
+                value={consultationData.diagnosis}
+                onChange={(e) => setConsultationData({ ...consultationData, diagnosis: e.target.value })}
+                className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm"
+              />
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => setShowConsultationModal(false)} className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
